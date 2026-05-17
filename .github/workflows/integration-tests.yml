@@ -1,0 +1,408 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    container: node:24
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npm run typecheck
+
+  property-tests:
+    needs: [typecheck]
+    runs-on: ubuntu-latest
+    container: node:24
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npx playwright test --project=property-tests
+
+  test-postgres:
+    needs: [property-tests]
+    runs-on: ubuntu-latest
+    container: node:24
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: testdb
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U testuser -d testdb"
+          --health-interval 5s
+          --health-timeout 30s
+          --health-retries 5
+    env:
+      CI: true
+      PW_DB_TYPE: postgresql
+      PW_DB_HOST: postgres
+      PW_DB_PORT: "5432"
+      PW_DB_NAME: testdb
+      PW_DB_USERNAME: testuser
+      PW_DB_PASSWORD: testpass
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - name: Validate environment variables
+        run: bash .github/scripts/validate-env.sh PW_DB_TYPE PW_DB_HOST PW_DB_PORT PW_DB_NAME PW_DB_USERNAME PW_DB_PASSWORD
+      - name: Run PostgreSQL integration tests
+        run: npx playwright test --project=api-integration
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-report-postgres
+          path: playwright-report/
+          retention-days: 7
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-postgres
+          path: test-results/
+          retention-days: 7
+
+  test-mysql:
+    needs: [property-tests]
+    runs-on: ubuntu-latest
+    container: node:24
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: testdb
+          MYSQL_USER: testuser
+          MYSQL_PASSWORD: testpass
+          MYSQL_ROOT_PASSWORD: rootpass
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1"
+          --health-interval 5s
+          --health-timeout 30s
+          --health-retries 5
+    env:
+      CI: true
+      PW_DB_TYPE: mysql
+      PW_DB_HOST: mysql
+      PW_DB_PORT: "3306"
+      PW_DB_NAME: testdb
+      PW_DB_USERNAME: testuser
+      PW_DB_PASSWORD: testpass
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - name: Validate environment variables
+        run: bash .github/scripts/validate-env.sh PW_DB_TYPE PW_DB_HOST PW_DB_PORT PW_DB_NAME PW_DB_USERNAME PW_DB_PASSWORD
+      - name: Run MySQL integration tests
+        run: npx playwright test --project=api-integration
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-report-mysql
+          path: playwright-report/
+          retention-days: 7
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-mysql
+          path: test-results/
+          retention-days: 7
+
+  test-mssql:
+    needs: [property-tests]
+    runs-on: ubuntu-latest
+    container: node:24
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: "TestPass123!"
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P TestPass123! -C -Q 'SELECT 1'"
+          --health-interval 10s
+          --health-timeout 60s
+          --health-retries 6
+    env:
+      CI: true
+      PW_DB_TYPE: mssql
+      PW_DB_HOST: mssql
+      PW_DB_PORT: "1433"
+      PW_DB_NAME: master
+      PW_DB_USERNAME: sa
+      PW_DB_PASSWORD: "TestPass123!"
+      PW_DB_ENCRYPT: "false"
+      PW_DB_TRUST_SERVER_CERTIFICATE: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - name: Validate environment variables
+        run: bash .github/scripts/validate-env.sh PW_DB_TYPE PW_DB_HOST PW_DB_PORT PW_DB_NAME PW_DB_USERNAME PW_DB_PASSWORD
+      - name: Run MSSQL integration tests
+        run: npx playwright test --project=api-integration
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-report-mssql
+          path: playwright-report/
+          retention-days: 7
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-mssql
+          path: test-results/
+          retention-days: 7
+
+  test-sqlite:
+    needs: [property-tests]
+    runs-on: ubuntu-latest
+    container: node:24
+    env:
+      CI: true
+      PW_DB_TYPE: sqlite
+      PW_DB_NAME: ${{ github.workspace }}/tmp/test.db
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - name: Create SQLite database
+        run: mkdir -p tmp && touch tmp/test.db
+      - name: Run SQLite integration tests
+        run: npx playwright test --project=api-integration
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-report-sqlite
+          path: playwright-report/
+          retention-days: 7
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-sqlite
+          path: test-results/
+          retention-days: 7
+
+  test-redis:
+    needs: [property-tests]
+    runs-on: ubuntu-latest
+    container: node:24
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 30s
+          --health-retries 5
+    env:
+      CI: true
+      PW_REDIS_HOST: redis
+      PW_REDIS_PORT: "6379"
+      PW_REDIS_KEY_PREFIX: "test:ci-${{ github.run_id }}:"
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - name: Validate environment variables
+        run: bash .github/scripts/validate-env.sh PW_REDIS_HOST PW_REDIS_PORT PW_REDIS_KEY_PREFIX
+      - name: Run Redis integration tests
+        run: npx playwright test --project=api-integration
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-report-redis
+          path: playwright-report/
+          retention-days: 7
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-redis
+          path: test-results/
+          retention-days: 7
+
+  test-kafka:
+    needs: [property-tests]
+    runs-on: ubuntu-latest
+    container: node:24
+    services:
+      kafka:
+        image: apache/kafka:latest
+        env:
+          KAFKA_NODE_ID: 1
+          KAFKA_PROCESS_ROLES: broker,controller
+          KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+          KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+          KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+          KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+          KAFKA_NUM_PARTITIONS: 1
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+          CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+        ports:
+          - 9092:9092
+        options: >-
+          --health-cmd "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092"
+          --health-interval 10s
+          --health-timeout 60s
+          --health-retries 6
+    env:
+      CI: true
+      PW_KAFKA_BROKERS: kafka:9092
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - name: Validate environment variables
+        run: bash .github/scripts/validate-env.sh PW_KAFKA_BROKERS
+      - name: Run Kafka integration tests
+        run: npx playwright test --project=api-integration
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-report-kafka
+          path: playwright-report/
+          retention-days: 7
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-kafka
+          path: test-results/
+          retention-days: 7
+
+  test-openapi:
+    needs: [property-tests]
+    runs-on: ubuntu-latest
+    container: node:24
+    env:
+      CI: true
+      PW_OPENAPI_SPEC_PATH: https://petstore.swagger.io/v2/swagger.json
+      PW_OPENAPI_BASE_URL: http://localhost:4010
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - name: Start Prism mock server
+        run: npx @stoplight/prism-cli mock https://petstore.swagger.io/v2/swagger.json --port 4010 --host 0.0.0.0 &
+      - name: Wait for mock server
+        run: |
+          for i in $(seq 1 30); do
+            if node -e "const http = require('http'); http.get('http://localhost:4010', (r) => { process.exit(r.statusCode < 500 ? 0 : 1); }).on('error', () => process.exit(1));" 2>/dev/null; then
+              echo "Mock server is ready"
+              exit 0
+            fi
+            echo "Waiting for mock server... ($i/30)"
+            sleep 1
+          done
+          echo "Mock server failed to start within 30 seconds"
+          exit 1
+      - name: Run OpenAPI integration tests
+        run: npx playwright test --project=openapi
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-report-openapi
+          path: playwright-report/
+          retention-days: 7
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-openapi
+          path: test-results/
+          retention-days: 7
+
+  test-browser:
+    needs: [property-tests]
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+      PW_OPENAPI_BASE_URL: http://localhost:4010
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: npm ci
+      - name: Start Prism mock server
+        run: npx @stoplight/prism-cli mock https://petstore.swagger.io/v2/swagger.json --port 4010 --host 0.0.0.0 &
+      - name: Wait for mock server
+        run: |
+          for i in $(seq 1 30); do
+            if curl -s http://localhost:4010 > /dev/null 2>&1; then
+              echo "Mock server is ready"
+              exit 0
+            fi
+            echo "Waiting for mock server... ($i/30)"
+            sleep 1
+          done
+          echo "Mock server failed to start within 30 seconds"
+          exit 1
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium firefox webkit
+      - name: Run browser tests
+        run: npx playwright test --project=browser-chromium --project=browser-firefox --project=browser-webkit
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-report-browser
+          path: playwright-report/
+          retention-days: 7
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-browser
+          path: test-results/
+          retention-days: 7
+
+  test-cli-e2e:
+    needs: [property-tests]
+    runs-on: ubuntu-latest
+    container: node:24
+    env:
+      CI: true
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - name: Run CLI E2E tests
+        run: npx playwright test tests/integration/cli-e2e.spec.ts
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-report-cli-e2e
+          path: playwright-report/
+          retention-days: 7
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-cli-e2e
+          path: test-results/
+          retention-days: 7

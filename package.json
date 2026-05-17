@@ -1,0 +1,44 @@
+{
+    "name": "playwright-framework",
+    "version": "1.0.0",
+    "description": "Reusable Playwright test framework template with extensible fixture architecture for API and integration testing",
+    "main": "src/index.ts",
+    "bin": {
+        "playwright-framework": "./src/cli/index.ts"
+    },
+    "scripts": {
+        "test": "npx playwright test",
+        "test:tag": "npx playwright test --grep",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@inquirer/prompts": "^7.3.2",
+        "@mobilewright/test": "^0.0.35",
+        "@playwright/test": "^1.52.0",
+        "better-sqlite3": "^11.6.0",
+        "dotenv": "^16.4.5",
+        "fast-check": "^3.22.0",
+        "ioredis": "^5.4.1",
+        "kafkajs": "^2.2.4",
+        "mobilewright": "^0.0.35",
+        "mssql": "^11.0.1",
+        "mysql2": "^3.11.0",
+        "openapi-client-axios": "^7.5.5",
+        "pg": "^8.13.0"
+    },
+    "devDependencies": {
+        "@types/better-sqlite3": "^7.6.0",
+        "@types/node": "^22.0.0",
+        "@types/pg": "^8.11.0",
+        "tsx": "^4.19.0",
+        "typescript": "^5.6.0"
+    },
+    "keywords": [
+        "playwright",
+        "testing",
+        "api",
+        "integration",
+        "fixtures"
+    ],
+    "license": "MIT"
+}
