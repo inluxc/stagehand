@@ -82,10 +82,6 @@ export default defineConfig<ConfigOptions>({
             testMatch: '**/*.prop.ts',
             use: {},
         },
-        {
-            name: 'cli-e2e',
-            testMatch: '**/integration/cli-e2e.spec.ts',
-            use: {},
-        },
+
     ],
 });

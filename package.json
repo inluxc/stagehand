@@ -3,16 +3,12 @@
     "version": "1.0.0",
     "description": "Reusable Playwright test framework template with extensible fixture architecture for API and integration testing",
     "main": "src/index.ts",
-    "bin": {
-        "playwright-framework": "./src/cli/index.ts"
-    },
     "scripts": {
         "test": "npx playwright test",
         "test:tag": "npx playwright test --grep",
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
-        "@inquirer/prompts": "^7.3.2",
         "@mobilewright/test": "^0.0.35",
         "@playwright/test": "^1.52.0",
         "better-sqlite3": "^11.6.0",
