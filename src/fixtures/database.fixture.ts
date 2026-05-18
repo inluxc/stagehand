@@ -285,7 +285,7 @@ async function createSqliteClient(config: DatabaseFixtureConfig): Promise<Databa
 async function createMssqlClient(config: DatabaseFixtureConfig): Promise<DatabaseClient> {
     const mssqlModule = await import('mssql');
     // Handle ESM/CJS interop — ConnectionPool may be on default export or top-level
-    const mssql = (mssqlModule as { default?: typeof mssqlModule }).default ?? mssqlModule;
+    const mssql = ((mssqlModule as unknown as { default?: typeof mssqlModule }).default ?? mssqlModule) as typeof mssqlModule;
 
     const connectionTimeout = config.connectionTimeout ?? DEFAULT_CONNECTION_TIMEOUT;
     const queryTimeout = config.queryTimeout ?? DEFAULT_QUERY_TIMEOUT;
