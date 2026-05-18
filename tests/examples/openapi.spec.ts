@@ -9,6 +9,9 @@
  *   - A valid OpenAPI spec path configured in environments.json or via PW_OPENAPI_SPEC_PATH
  *   - The target API server running and accessible
  *
+ * This example uses the Petstore v2 spec (https://petstore.swagger.io/v2/swagger.json)
+ * with a Prism mock server in CI.
+ *
  * @requirements 7.3, 1.6
  */
 
@@ -24,11 +27,13 @@ test.describe('OpenAPI Fixture Examples', () => {
         //   - client: an Axios instance extended with operation methods from the spec
         //   - api: the underlying OpenAPIClientAxios instance for advanced usage
 
-        const { client, api } = openApiClient;
+        const { client } = openApiClient;
 
         // Call an operation defined in the OpenAPI spec by its operationId.
-        // For example, if the spec defines: operationId: "getUsers"
-        const response = await (client as any).getUsers();
+        // The Petstore spec defines: operationId: "findPetsByStatus"
+        const response = await (client as any).findPetsByStatus(null, null, {
+            params: { status: 'available' },
+        });
 
         // Validate the response
         expect(response.status).toBe(200);
@@ -40,25 +45,29 @@ test.describe('OpenAPI Fixture Examples', () => {
         const { client } = openApiClient;
 
         // Operations with path parameters pass them as the first argument.
-        // For example: operationId: "getUserById" with path param {id}
-        const response = await (client as any).getUserById({ id: '123' });
+        // The Petstore spec defines: operationId: "getPetById" with path param {petId}
+        const response = await (client as any).getPetById({ petId: 1 });
 
         expect(response.status).toBe(200);
-        expect(response.data.id).toBe('123');
+        expect(response.data).toBeDefined();
+        expect(response.data.id).toBeDefined();
     });
 
     test('call operation with request body', async ({ openApiClient }) => {
         const { client } = openApiClient;
 
         // POST operations pass the request body as the second argument.
-        // For example: operationId: "createUser"
-        const response = await (client as any).createUser(null, {
-            name: 'Test User',
-            email: 'test@example.com',
+        // The Petstore spec defines: operationId: "addPet"
+        const response = await (client as any).addPet(null, {
+            name: 'TestPet',
+            photoUrls: ['https://example.com/photo.jpg'],
+            status: 'available',
         });
 
-        expect(response.status).toBe(201);
-        expect(response.data.name).toBe('Test User');
+        // addPet returns 200 on success per the Petstore spec mock
+        expect(response.status).toBe(200);
+        expect(response.data).toBeDefined();
+        expect(response.data.name).toBe('TestPet');
     });
 
     test('access the underlying OpenAPIClientAxios instance', async ({ openApiClient }) => {
