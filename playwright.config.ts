@@ -78,6 +78,27 @@ export default defineConfig<ConfigOptions>({
             },
         },
         {
+            name: 'integration-database',
+            testMatch: '**/examples/database.spec.ts',
+            use: {
+                database: config.database,
+            },
+        },
+        {
+            name: 'integration-kafka',
+            testMatch: '**/examples/kafka.spec.ts',
+            use: {
+                kafka: config.kafka,
+            },
+        },
+        {
+            name: 'integration-redis',
+            testMatch: '**/examples/redis.spec.ts',
+            use: {
+                redis: config.redis,
+            },
+        },
+        {
             name: 'property-tests',
             testMatch: '**/*.prop.ts',
             use: {},

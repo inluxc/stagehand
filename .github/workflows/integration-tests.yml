@@ -60,7 +60,7 @@ jobs:
       - name: Validate environment variables
         run: bash .github/scripts/validate-env.sh PW_DB_TYPE PW_DB_HOST PW_DB_PORT PW_DB_NAME PW_DB_USERNAME PW_DB_PASSWORD
       - name: Run PostgreSQL integration tests
-        run: npx playwright test --project=api-integration
+        run: npx playwright test --project=integration-database
       - name: Upload HTML report
         if: always()
         uses: actions/upload-artifact@v4
@@ -109,7 +109,7 @@ jobs:
       - name: Validate environment variables
         run: bash .github/scripts/validate-env.sh PW_DB_TYPE PW_DB_HOST PW_DB_PORT PW_DB_NAME PW_DB_USERNAME PW_DB_PASSWORD
       - name: Run MySQL integration tests
-        run: npx playwright test --project=api-integration
+        run: npx playwright test --project=integration-database
       - name: Upload HTML report
         if: always()
         uses: actions/upload-artifact@v4
@@ -158,7 +158,7 @@ jobs:
       - name: Validate environment variables
         run: bash .github/scripts/validate-env.sh PW_DB_TYPE PW_DB_HOST PW_DB_PORT PW_DB_NAME PW_DB_USERNAME PW_DB_PASSWORD
       - name: Run MSSQL integration tests
-        run: npx playwright test --project=api-integration
+        run: npx playwright test --project=integration-database
       - name: Upload HTML report
         if: always()
         uses: actions/upload-artifact@v4
@@ -188,7 +188,7 @@ jobs:
       - name: Create SQLite database
         run: mkdir -p tmp && touch tmp/test.db
       - name: Run SQLite integration tests
-        run: npx playwright test --project=api-integration
+        run: npx playwright test --project=integration-database
       - name: Upload HTML report
         if: always()
         uses: actions/upload-artifact@v4
@@ -229,7 +229,7 @@ jobs:
       - name: Validate environment variables
         run: bash .github/scripts/validate-env.sh PW_REDIS_HOST PW_REDIS_PORT PW_REDIS_KEY_PREFIX
       - name: Run Redis integration tests
-        run: npx playwright test --project=api-integration
+        run: npx playwright test --project=integration-redis
       - name: Upload HTML report
         if: always()
         uses: actions/upload-artifact@v4
@@ -280,7 +280,7 @@ jobs:
       - name: Validate environment variables
         run: bash .github/scripts/validate-env.sh PW_KAFKA_BROKERS
       - name: Run Kafka integration tests
-        run: npx playwright test --project=api-integration
+        run: npx playwright test --project=integration-kafka
       - name: Upload HTML report
         if: always()
         uses: actions/upload-artifact@v4

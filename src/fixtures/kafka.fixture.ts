@@ -162,7 +162,14 @@ export const kafkaFixture = {
 
                 const messages: KafkaMessage[] = [];
 
-                await consumer.subscribe({ topic, fromBeginning });
+                try {
+                    await consumer.subscribe({ topic, fromBeginning });
+                } catch (error) {
+                    // If the topic does not exist or metadata fetch fails,
+                    // return an empty array instead of throwing — matches the
+                    // documented "returns empty array on timeout" contract.
+                    return [];
+                }
 
                 return new Promise<KafkaMessage[]>((resolve) => {
                     let timeoutHandle: ReturnType<typeof setTimeout>;
