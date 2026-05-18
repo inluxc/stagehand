@@ -239,6 +239,14 @@ export class ConfigLoader {
                 if (!cfg.database) cfg.database = { type: 'postgresql', database: '' };
                 cfg.database.password = val;
             },
+            'PW_DB_ENCRYPT': (cfg, val) => {
+                if (!cfg.database) cfg.database = { type: 'postgresql', database: '' };
+                cfg.database.encrypt = val.toLowerCase() === 'true';
+            },
+            'PW_DB_TRUST_SERVER_CERTIFICATE': (cfg, val) => {
+                if (!cfg.database) cfg.database = { type: 'postgresql', database: '' };
+                cfg.database.trustServerCertificate = val.toLowerCase() === 'true';
+            },
             'PW_KAFKA_BROKERS': (cfg, val) => {
                 if (!cfg.kafka) cfg.kafka = { brokers: [] };
                 cfg.kafka.brokers = val.split(',').map(b => b.trim());
