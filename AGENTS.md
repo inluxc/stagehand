@@ -16,6 +16,7 @@ A reusable Playwright test framework with an extensible fixture architecture for
 - **Database:** PostgreSQL (`pg`), MySQL (`mysql2`), MSSQL (`mssql`), SQLite (`better-sqlite3`)
 - **Messaging:** KafkaJS (`kafkajs ^2.2.4`)
 - **Cache:** ioredis (`ioredis ^5.4.1`)
+- **OTP/2FA:** otplib (`otplib ^13.4.0`)
 - **Property Testing:** fast-check (`fast-check ^3.22.0`)
 - **Env Loading:** dotenv (`dotenv ^16.4.5`)
 
@@ -36,6 +37,7 @@ src/
 │   ├── database.fixture.ts     # Database client fixture (pg/mysql/sqlite)
 │   ├── kafka.fixture.ts        # Kafka producer/consumer fixture
 │   ├── redis.fixture.ts        # Redis client fixture
+│   ├── otp.fixture.ts          # OTP (TOTP/HOTP) fixture for 2FA/MFA testing
 │   └── mobilewright.fixture.ts # Mobile testing fixture
 ├── secrets/
 │   ├── index.ts                # Secrets module exports
@@ -50,6 +52,7 @@ tests/
 │   ├── database.spec.ts
 │   ├── kafka.spec.ts
 │   ├── redis.spec.ts
+│   ├── otp.spec.ts
 │   └── mobilewright.spec.ts
 ├── integration/                # Integration/E2E tests
 └── properties/                 # Property-based tests (*.prop.ts)
@@ -91,6 +94,7 @@ Request fixtures by name in the test function signature:
 | `databaseClient` | `DatabaseClient` | DB client with `query<T>(sql, params?)` and `execute(sql, params?)` |
 | `kafkaClient` | `KafkaClient` | Kafka with `produce(topic, messages)` and `consume(topic, options?)` |
 | `redisClient` | `RedisClient` | Redis with `get`, `set`, `del`, `publish`, `subscribe` |
+| `otpClient` | `OtpClient` | OTP with `generateTotp`, `verifyTotp`, `generateHotp`, `verifyHotp`, `generateSecret`, `generateKeyUri` |
 | `mobilewrightDevice` | `MobilewrightDevice` | Device control (`openUrl`) |
 | `mobilewrightScreen` | `MobilewrightScreen` | Screen interactions (`tap`, `fill`, `swipe`, `getByText`, etc.) |
 
@@ -153,6 +157,23 @@ await mobilewrightScreen.fill(mobilewrightScreen.getByLabel('Email'), 'a@b.com')
 await mobilewrightScreen.swipe('down');
 ```
 
+**OTP Client:**
+```typescript
+// Generate a new base32 secret
+const secret = otpClient.generateSecret();
+
+// TOTP — time-based one-time password
+const token = await otpClient.generateTotp(secret);
+const isValid = await otpClient.verifyTotp(token, secret);
+
+// HOTP — counter-based one-time password
+const hotpToken = await otpClient.generateHotp(0, secret);  // counter = 0
+const hotpValid = await otpClient.verifyHotp(hotpToken, 0, secret);
+
+// Generate otpauth:// URI for QR code provisioning
+const uri = otpClient.generateKeyUri('user@example.com', 'MyApp', secret);
+```
+
 ## Configuration System
 
 ### Three-Tier Precedence (highest → lowest)
@@ -179,6 +200,11 @@ Set active environment: `PW_ENVIRONMENT=dev`
 | `PW_REDIS_KEY_PREFIX` | Test key prefix for isolation |
 | `PW_MOBILE_PLATFORM` | `ios` or `android` |
 | `PW_MOBILE_BUNDLE_ID`, `PW_MOBILE_DEVICE_NAME`, `PW_MOBILE_APP_PATH` | Mobile config |
+| `PW_OTP_SECRET` | Base32-encoded OTP secret |
+| `PW_OTP_DIGITS` | Token length (default: 6) |
+| `PW_OTP_PERIOD` | TOTP time step in seconds (default: 30) |
+| `PW_OTP_ALGORITHM` | Hash algorithm: `sha1`, `sha256`, `sha512` |
+| `PW_OTP_ISSUER` | Issuer name for URI generation |
 
 ## Playwright Projects
 

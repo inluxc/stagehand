@@ -1690,6 +1690,123 @@ test.describe('Integration — End-to-End Order Flow', () => {
 
 ---
 
+## Skill 14: Create an OTP/2FA Test
+
+**When to use:** Testing two-factor authentication (2FA) or multi-factor authentication (MFA) flows that require TOTP or HOTP token generation/verification.
+
+**Steps:**
+
+1. Use the `otpClient` fixture in your test
+2. Generate a secret (or use a pre-configured one from your test user setup)
+3. Generate tokens and verify them, or use them in login flows
+
+**Template:**
+
+```typescript
+import { test, expect } from '../../src';
+
+test.describe('OTP — 2FA Authentication Flow', () => {
+    test('generate and verify a TOTP token', async ({ otpClient }) => {
+        // Generate a new secret (simulates user enabling 2FA)
+        const secret = otpClient.generateSecret();
+        expect(secret).toMatch(/^[A-Z2-7]+$/); // base32 format
+
+        // Generate a time-based token
+        const token = await otpClient.generateTotp(secret);
+        expect(token).toMatch(/^\d{6}$/);
+
+        // Verify the token is valid
+        const isValid = await otpClient.verifyTotp(token, secret);
+        expect(isValid).toBe(true);
+    });
+
+    test('reject an invalid TOTP token', async ({ otpClient }) => {
+        const secret = otpClient.generateSecret();
+
+        const isValid = await otpClient.verifyTotp('000000', secret);
+        expect(isValid).toBe(false);
+    });
+
+    test('HOTP tokens are counter-specific', async ({ otpClient }) => {
+        const secret = otpClient.generateSecret();
+
+        // Generate token for counter 1
+        const token = await otpClient.generateHotp(1, secret);
+        expect(token).toMatch(/^\d{6}$/);
+
+        // Verify against correct counter
+        const validAtCounter1 = await otpClient.verifyHotp(token, 1, secret);
+        expect(validAtCounter1).toBe(true);
+
+        // Reject against wrong counter
+        const validAtCounter2 = await otpClient.verifyHotp(token, 2, secret);
+        expect(validAtCounter2).toBe(false);
+    });
+
+    test('generate otpauth URI for QR code provisioning', async ({ otpClient }) => {
+        const secret = otpClient.generateSecret();
+
+        const uri = otpClient.generateKeyUri('user@example.com', 'MyApp', secret);
+        expect(uri).toContain('otpauth://totp/');
+        expect(uri).toContain('secret=');
+        expect(uri).toContain('issuer=MyApp');
+    });
+});
+
+// Integration example: OTP + API login flow
+test.describe('OTP — Login with 2FA', () => {
+    test('complete 2FA login flow', async ({ otpClient, openApiClient }) => {
+        const { client } = openApiClient;
+        const secret = 'JBSWY3DPEHPK3PXP'; // pre-configured test user secret
+
+        // Step 1: Initial login (returns 2FA challenge)
+        const loginResponse = await (client as any).login(null, {
+            email: 'test@example.com',
+            password: 'password123',
+        });
+        expect(loginResponse.status).toBe(200);
+        expect(loginResponse.data.requires2FA).toBe(true);
+
+        // Step 2: Generate TOTP and submit
+        const token = await otpClient.generateTotp(secret);
+        const verifyResponse = await (client as any).verify2FA(null, {
+            sessionId: loginResponse.data.sessionId,
+            token,
+        });
+        expect(verifyResponse.status).toBe(200);
+        expect(verifyResponse.data).toHaveProperty('accessToken');
+    });
+});
+```
+
+**Configuration (optional):**
+
+```typescript
+// In playwright.config.ts project use block:
+use: {
+    otp: {
+        secret: 'JBSWY3DPEHPK3PXP',  // default secret for all methods
+        digits: 6,                      // token length (default: 6)
+        period: 30,                     // TOTP time step in seconds (default: 30)
+        window: 1,                      // verification tolerance in periods (default: 1)
+        algorithm: 'sha1',              // sha1 | sha256 | sha512 (default: sha1)
+        issuer: 'MyApp',               // for URI generation
+    },
+}
+```
+
+**Key points:**
+- `generateSecret()` returns a base32-encoded string suitable for provisioning
+- `generateTotp(secret?)` / `verifyTotp(token, secret?)` — time-based (RFC 6238)
+- `generateHotp(counter, secret?)` / `verifyHotp(token, counter, secret?)` — counter-based (RFC 4226)
+- `generateKeyUri(account, issuer?, secret?)` — produces `otpauth://` URI for QR codes
+- All generate/verify methods are async (returns `Promise`)
+- If a default secret is configured, the `secret` parameter is optional in all methods
+- The `window` config controls time drift tolerance (1 = ±30s with default period)
+- Useful for testing: 2FA enrollment, login flows, backup codes, account recovery
+
+---
+
 ## Quick Decision Guide
 
 | I want to... | Use Skill |
@@ -1707,3 +1824,4 @@ test.describe('Integration — End-to-End Order Flow', () => {
 | Set up/tear down test data | Skill 11 (Data Lifecycle) |
 | Organize tests by category | Skill 12 (Tags) |
 | Test across multiple systems | Skill 13 (Multi-Fixture) |
+| Test 2FA/MFA with OTP tokens | Skill 14 (OTP) |

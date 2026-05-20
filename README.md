@@ -1,6 +1,6 @@
 # Playwright Framework Template
 
-A reusable Playwright test framework template with an extensible fixture architecture for API, integration, browser, and mobile testing. Includes pre-built fixtures for OpenAPI, Database, Kafka, Redis, and Mobilewright mobile testing — with built-in support for security testing, responsiveness validation, accessibility (ARIA) coverage, console error tracking, and performance monitoring.
+A reusable Playwright test framework template with an extensible fixture architecture for API, integration, browser, and mobile testing. Includes pre-built fixtures for OpenAPI, Database, Kafka, Redis, OTP (2FA/MFA), and Mobilewright mobile testing — with built-in support for security testing, responsiveness validation, accessibility (ARIA) coverage, console error tracking, and performance monitoring.
 
 ## Prerequisites
 
@@ -122,6 +122,7 @@ The `ConfigOptions` interface defines the fixture options available in the `use`
 | `kafka` | `KafkaFixtureConfig` | `kafkaClient` fixture |
 | `redis` | `RedisFixtureConfig` | `redisClient` fixture |
 | `mobilewright` | `MobilewrightFixtureConfig` | `mobilewrightDevice` / `mobilewrightScreen` fixtures |
+| `otp` | `OtpFixtureConfig` | `otpClient` fixture |
 
 All options are optional — when not provided in the project `use` block, fixtures fall back to loading config from `ConfigLoader` (env vars → `.env` file → `environments.json`).
 
@@ -255,6 +256,31 @@ test('tap login button on mobile', async ({ mobilewrightScreen, mobilewrightDevi
   // Verify navigation
   const welcomeText = mobilewrightScreen.getByText('Welcome');
   expect(welcomeText).toBeDefined();
+});
+```
+
+### OTP Fixture (2FA/MFA)
+
+```typescript
+import { test, expect } from '../src/fixtures';
+
+test('generate and verify TOTP for 2FA login', async ({ otpClient }) => {
+  // Generate a secret (or use one from your test user setup)
+  const secret = otpClient.generateSecret();
+
+  // Generate a time-based token
+  const token = await otpClient.generateTotp(secret);
+  expect(token).toMatch(/^\d{6}$/);
+
+  // Verify the token
+  const isValid = await otpClient.verifyTotp(token, secret);
+  expect(isValid).toBe(true);
+});
+
+test('generate otpauth URI for QR provisioning', async ({ otpClient }) => {
+  const secret = otpClient.generateSecret();
+  const uri = otpClient.generateKeyUri('user@example.com', 'MyApp', secret);
+  expect(uri).toContain('otpauth://totp/');
 });
 ```
 
