@@ -45,17 +45,21 @@ test('api test with OpenAPI client', async ({ openApiClient }) => {
 
 ## Available Fixtures
 
-| Fixture | Type | What it does |
-|---------|------|--------------|
-| `openApiClient` | `OpenApiClient` | Typed HTTP client generated from your OpenAPI spec |
-| `databaseClient` | `DatabaseClient` | Multi-dialect DB client (PostgreSQL, MySQL, MSSQL, SQLite) |
-| `kafkaClient` | `KafkaClient` | Kafka producer/consumer |
-| `redisClient` | `RedisClient` | Redis client with pub/sub |
-| `otpClient` | `OtpClient` | TOTP/HOTP generation and verification for 2FA testing |
-| `mobilewrightDevice` | `MobilewrightDevice` | Mobile device control |
-| `mobilewrightScreen` | `MobilewrightScreen` | Mobile screen interactions |
+| Fixture | Type | What it does | Docs |
+|---------|------|--------------|------|
+| `openApiClient` | `OpenApiClient` | Typed HTTP client generated from your OpenAPI spec | [Setup & Usage](docs/openapi-fixture.md) |
+| `databaseClient` | `DatabaseClient` | Multi-dialect DB client (PostgreSQL, MySQL, MSSQL, SQLite) | [Setup & Usage](docs/database-fixture.md) |
+| `kafkaClient` | `KafkaClient` | Kafka producer/consumer | [Setup & Usage](docs/kafka-fixture.md) |
+| `redisClient` | `RedisClient` | Redis client with pub/sub | [Setup & Usage](docs/redis-fixture.md) |
+| `mongoDbClient` | `MongoDbClient` | MongoDB CRUD and aggregation client | [Setup & Usage](docs/mongodb-fixture.md) |
+| `graphqlClient` | `GraphQLClient` | GraphQL query/mutation client | [Setup & Usage](docs/graphql-fixture.md) |
+| `otpClient` | `OtpClient` | TOTP/HOTP generation and verification for 2FA testing | [Setup & Usage](docs/otp-fixture.md) |
+| `mobilewrightDevice` | `MobilewrightDevice` | Mobile device control | [Setup & Usage](docs/mobilewright-fixture.md) |
+| `mobilewrightScreen` | `MobilewrightScreen` | Mobile screen interactions | [Setup & Usage](docs/mobilewright-fixture.md) |
 
 All standard Playwright fixtures (`page`, `request`, `context`, `browser`, `browserName`) remain fully available.
+
+> For creating your own fixtures, see [Custom Fixtures](docs/custom-fixtures.md).
 
 ---
 
