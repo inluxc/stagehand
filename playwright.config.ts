@@ -70,11 +70,12 @@ export default defineConfig<ConfigOptions>({
         },
         {
             name: 'api-integration',
-            testMatch: '**/examples/{database,kafka,redis}.spec.ts',
+            testMatch: '**/examples/{database,kafka,redis,mongodb}.spec.ts',
             use: {
                 database: config.database,
                 kafka: config.kafka,
                 redis: config.redis,
+                mongodb: config.mongodb,
             },
         },
         {
@@ -96,6 +97,13 @@ export default defineConfig<ConfigOptions>({
             testMatch: '**/examples/redis.spec.ts',
             use: {
                 redis: config.redis,
+            },
+        },
+        {
+            name: 'integration-mongodb',
+            testMatch: '**/examples/mongodb.spec.ts',
+            use: {
+                mongodb: config.mongodb,
             },
         },
         {

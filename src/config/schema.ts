@@ -106,6 +106,30 @@ export interface MobilewrightFixtureConfig {
 }
 
 /**
+ * Configuration for the MongoDB connection fixture.
+ */
+export interface MongoDbFixtureConfig {
+    /** Full MongoDB connection URI (overrides host/port/auth fields when provided). */
+    uri?: string;
+    /** MongoDB server host (default: 'localhost'). */
+    host?: string;
+    /** MongoDB server port (default: 27017). */
+    port?: number;
+    /** Database name. */
+    database: string;
+    /** Authentication username. */
+    username?: string;
+    /** Authentication password. */
+    password?: string;
+    /** Authentication source database (default: 'admin'). */
+    authSource?: string;
+    /** Whether to use mongodb+srv:// protocol (default: false). */
+    srv?: boolean;
+    /** Connection timeout in ms (default: 10000). */
+    connectionTimeout?: number;
+}
+
+/**
  * Configuration for the OTP (One-Time Password) fixture.
  */
 export interface OtpFixtureConfig {
@@ -151,6 +175,8 @@ export interface FrameworkConfig {
     kafka?: KafkaFixtureConfig;
     /** Redis fixture configuration. */
     redis?: RedisFixtureConfig;
+    /** MongoDB fixture configuration. */
+    mongodb?: MongoDbFixtureConfig;
     /** Mobilewright fixture configuration. */
     mobilewright?: MobilewrightFixtureConfig;
     /** OTP fixture configuration. */

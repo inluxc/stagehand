@@ -26,6 +26,7 @@ import type {
     DatabaseFixtureConfig,
     KafkaFixtureConfig,
     RedisFixtureConfig,
+    MongoDbFixtureConfig,
     MobilewrightFixtureConfig,
     OtpFixtureConfig,
 } from '../config/schema';
@@ -34,6 +35,7 @@ import { databaseFixture, type DatabaseClient } from './database.fixture';
 import { kafkaFixture, type KafkaClient } from './kafka.fixture';
 import { redisFixture, type RedisClient } from './redis.fixture';
 import { mobilewrightFixture, type MobilewrightScreen, type MobilewrightDevice } from './mobilewright.fixture';
+import { mongoDbFixture, type MongoDbClient } from './mongodb.fixture';
 import { otpFixture, type OtpClient } from './otp.fixture';
 
 /**
@@ -46,6 +48,7 @@ export interface ConfigOptions {
     database: DatabaseFixtureConfig | undefined;
     kafka: KafkaFixtureConfig | undefined;
     redis: RedisFixtureConfig | undefined;
+    mongodb: MongoDbFixtureConfig | undefined;
     mobilewright: MobilewrightFixtureConfig | undefined;
     otp: OtpFixtureConfig | undefined;
 }
@@ -60,6 +63,7 @@ export interface FixtureTypes {
     kafkaClient: KafkaClient;
     redisConfig: RedisFixtureConfig;
     redisClient: RedisClient;
+    mongoDbClient: MongoDbClient;
     mobilewrightDevice: MobilewrightDevice;
     mobilewrightScreen: MobilewrightScreen;
     otpConfig: OtpFixtureConfig;
@@ -78,6 +82,7 @@ const configOptionFixtures = {
     database: [undefined as DatabaseFixtureConfig | undefined, { option: true }],
     kafka: [undefined as KafkaFixtureConfig | undefined, { option: true }],
     redis: [undefined as RedisFixtureConfig | undefined, { option: true }],
+    mongodb: [undefined as MongoDbFixtureConfig | undefined, { option: true }],
     mobilewright: [undefined as MobilewrightFixtureConfig | undefined, { option: true }],
     otp: [undefined as OtpFixtureConfig | undefined, { option: true }],
 };
@@ -159,6 +164,7 @@ const allFixtures = {
     ...kafkaFixture,
     ...redisConfigFixture,
     ...redisFixture,
+    ...mongoDbFixture,
     ...mobilewrightFixture,
     ...otpConfigFixture,
     ...otpFixture,
@@ -176,5 +182,6 @@ export type { OpenApiClient } from './openapi.fixture';
 export type { DatabaseClient } from './database.fixture';
 export type { KafkaClient } from './kafka.fixture';
 export type { RedisClient } from './redis.fixture';
+export type { MongoDbClient } from './mongodb.fixture';
 export type { MobilewrightScreen, MobilewrightDevice } from './mobilewright.fixture';
 export type { OtpClient } from './otp.fixture';

@@ -267,6 +267,38 @@ export class ConfigLoader {
                 if (!cfg.redis) cfg.redis = { host: '', port: 6379 };
                 cfg.redis.keyPrefix = val;
             },
+            'PW_MONGODB_URI': (cfg, val) => {
+                if (!cfg.mongodb) cfg.mongodb = { database: '' };
+                cfg.mongodb.uri = val;
+            },
+            'PW_MONGODB_HOST': (cfg, val) => {
+                if (!cfg.mongodb) cfg.mongodb = { database: '' };
+                cfg.mongodb.host = val;
+            },
+            'PW_MONGODB_PORT': (cfg, val) => {
+                if (!cfg.mongodb) cfg.mongodb = { database: '' };
+                cfg.mongodb.port = parseInt(val, 10);
+            },
+            'PW_MONGODB_DATABASE': (cfg, val) => {
+                if (!cfg.mongodb) cfg.mongodb = { database: '' };
+                cfg.mongodb.database = val;
+            },
+            'PW_MONGODB_USERNAME': (cfg, val) => {
+                if (!cfg.mongodb) cfg.mongodb = { database: '' };
+                cfg.mongodb.username = val;
+            },
+            'PW_MONGODB_PASSWORD': (cfg, val) => {
+                if (!cfg.mongodb) cfg.mongodb = { database: '' };
+                cfg.mongodb.password = val;
+            },
+            'PW_MONGODB_AUTH_SOURCE': (cfg, val) => {
+                if (!cfg.mongodb) cfg.mongodb = { database: '' };
+                cfg.mongodb.authSource = val;
+            },
+            'PW_MONGODB_SRV': (cfg, val) => {
+                if (!cfg.mongodb) cfg.mongodb = { database: '' };
+                cfg.mongodb.srv = val.toLowerCase() === 'true';
+            },
             'PW_MOBILE_PLATFORM': (cfg, val) => {
                 if (!cfg.mobilewright) cfg.mobilewright = { platform: 'ios', bundleId: '', deviceName: '', appPath: '' };
                 cfg.mobilewright.platform = val as 'ios' | 'android';
