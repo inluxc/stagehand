@@ -12,7 +12,7 @@
  *   });
  */
 
-import OpenAPIClientAxios from 'openapi-client-axios';
+import { OpenAPIClientAxios } from 'openapi-client-axios';
 import type { AxiosInstance } from 'openapi-client-axios';
 import type { OpenApiFixtureConfig } from '../config/schema';
 import { FixtureInitError } from '../errors';
