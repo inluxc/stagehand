@@ -16,6 +16,10 @@ import { test, expect } from '@playwright/test';
 import fc from 'fast-check';
 import { spawnSync } from 'child_process';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /** All required environment variables that the validation script checks */
 const REQUIRED_ENV_VARS = [

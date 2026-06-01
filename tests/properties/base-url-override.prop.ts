@@ -13,7 +13,7 @@
 
 import { test, expect } from '@playwright/test';
 import fc from 'fast-check';
-import OpenAPIClientAxios from 'openapi-client-axios';
+import { OpenAPIClientAxios } from 'openapi-client-axios';
 
 /**
  * Generates valid HTTP/HTTPS base URLs.
