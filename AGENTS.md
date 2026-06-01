@@ -114,13 +114,37 @@ Request fixtures by name in the test function signature:
 import { test, expect } from '../../src';
 
 test.describe('Feature Name', () => {
-    test('descriptive test name', async ({ fixtureName }) => {
-        // Arrange — set up test data
-        // Act — perform the operation
-        // Assert — verify the result with expect()
+    test('[TC-XXX-001] descriptive test name @TC-XXX-001', async ({ fixtureName }) => {
+        await test.step('Step 1: Set up test data', async () => {
+            // Arrange — set up test data
+        });
+
+        await test.step('Step 2: Perform the operation', async () => {
+            // Act — perform the operation
+        });
+
+        await test.step('Step 3: Verify the result', async () => {
+            // Assert — verify the result with expect()
+        });
+    });
+
+    test('[TC-XXX-002] another test case @TC-XXX-002', async ({ fixtureName }) => {
+        await test.step('Step 1: Prepare preconditions', async () => {
+            // ...
+        });
+
+        await test.step('Step 2: Execute action', async () => {
+            // ...
+        });
+
+        await test.step('Step 3: Assert expected outcome', async () => {
+            // ...
+        });
     });
 });
 ```
+
+> **Note:** Every test must include a unique `[TC-XXX-NNN]` at the start and `@TC-XXX-NNN` tag at the end of the title. Every test must use `test.step()` to break down the test into trackable steps. See "Test Case ID Convention" section for details.
 
 ### Fixture API Quick Reference
 
@@ -342,6 +366,125 @@ export const myFixture = {
 };
 ```
 
+## Test Case ID Convention
+
+Every generated test **must** include a unique TestCaseID in both the test title and the tags. This ensures traceability and prevents duplicate identifiers across the entire test suite.
+
+### Format
+
+- **Pattern:** `TC-XXX-NNN` where `XXX` is a short category code and `NNN` is a zero-padded sequential number.
+- **Category codes:** `API`, `DB`, `KFK`, `RDS`, `MDB`, `GQL`, `BRW`, `MOB`, `OTP`, `INT`, `PROP`, or a custom short code for new domains.
+- **Placement:** The TestCaseID appears in square brackets at the beginning of the test title AND as a tag.
+
+### Rules
+
+1. **Uniqueness:** Each TestCaseID must be globally unique across ALL spec files in the project. Before assigning an ID, check existing test files to determine the next available number in the category.
+2. **Title format:** `test('[TC-XXX-NNN] descriptive test name', ...)`
+3. **Tag format:** Add `@TC-XXX-NNN` as a tag in the test title (Playwright grep-compatible).
+4. **Sequential numbering:** Numbers increment within each category (e.g., `TC-API-001`, `TC-API-002`, ...).
+5. **No reuse:** Never reuse a TestCaseID, even if the original test is deleted.
+6. **Test steps are mandatory:** Every test must use `test.step()` to break the test body into discrete, labeled steps. Steps appear in Playwright reports and traces, enabling precise failure tracking.
+
+### Test Steps
+
+Every test body **must** be structured using `await test.step('Step N: description', async () => { ... })`. This provides:
+
+- **Traceability:** Each step is visible in the HTML report, trace viewer, and CI logs.
+- **Failure pinpointing:** When a test fails, the report shows exactly which step failed.
+- **Documentation:** Steps serve as living documentation of the test procedure.
+
+**Step naming convention:** `Step N: <verb phrase>` — use a clear action verb (e.g., "Navigate to login page", "Submit form with valid data", "Verify success message is displayed").
+
+### Examples
+
+```typescript
+test.describe('API — Users — Positive', () => {
+    test('[TC-API-001] GET /users — list all users returns 200 @TC-API-001', async ({ openApiClient }) => {
+        await test.step('Step 1: Send GET request to /users', async () => {
+            const { client } = openApiClient;
+            const response = await (client as any).listUsers();
+            expect(response.status).toBe(200);
+        });
+
+        await test.step('Step 2: Verify response contains array of users', async () => {
+            const { client } = openApiClient;
+            const response = await (client as any).listUsers();
+            expect(response.data).toBeInstanceOf(Array);
+            expect(response.data.length).toBeGreaterThan(0);
+        });
+    });
+
+    test('[TC-API-002] POST /users — create user with valid body returns 201 @TC-API-002', async ({ openApiClient }) => {
+        const { client } = openApiClient;
+        let createdId: string;
+
+        await test.step('Step 1: Send POST request with valid user data', async () => {
+            const response = await (client as any).createUser(null, {
+                name: 'Alice',
+                email: 'alice@example.com',
+            });
+            expect(response.status).toBe(201);
+            createdId = response.data.id;
+        });
+
+        await test.step('Step 2: Verify response contains created user with ID', async () => {
+            expect(createdId).toBeDefined();
+        });
+    });
+});
+
+test.describe('Database — Orders', () => {
+    test('[TC-DB-001] query active orders returns results @TC-DB-001', async ({ databaseClient }) => {
+        await test.step('Step 1: Execute SELECT query for active orders', async () => {
+            const rows = await databaseClient.query<{ id: number; status: string }>(
+                'SELECT id, status FROM orders WHERE status = $1', ['active']
+            );
+            expect(rows.length).toBeGreaterThan(0);
+        });
+
+        await test.step('Step 2: Verify all returned rows have active status', async () => {
+            const rows = await databaseClient.query<{ id: number; status: string }>(
+                'SELECT id, status FROM orders WHERE status = $1', ['active']
+            );
+            for (const row of rows) {
+                expect(row.status).toBe('active');
+            }
+        });
+    });
+});
+
+test.describe('Browser — Login — Functional', () => {
+    test('[TC-BRW-001] navigate to login and submit form @TC-BRW-001', async ({ page }) => {
+        await test.step('Step 1: Navigate to login page', async () => {
+            await page.goto('/login');
+            await expect(page.getByRole('heading', { name: 'Sign In' })).toBeVisible();
+        });
+
+        await test.step('Step 2: Fill in credentials', async () => {
+            await page.getByLabel('Email').fill('user@example.com');
+            await page.getByLabel('Password').fill('secret123');
+        });
+
+        await test.step('Step 3: Submit the form', async () => {
+            await page.getByRole('button', { name: 'Sign In' }).click();
+        });
+
+        await test.step('Step 4: Verify redirect to dashboard', async () => {
+            await expect(page).toHaveURL('/dashboard');
+            await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+        });
+    });
+});
+```
+
+### How to Determine the Next ID
+
+1. Search all `*.spec.ts` and `*.prop.ts` files for existing `TC-XXX-` patterns in the target category.
+2. Find the highest number currently in use.
+3. Increment by 1 for the next test.
+
+---
+
 ## Conventions
 
 - Use `test.describe()` to group related tests
@@ -351,3 +494,5 @@ export const myFixture = {
 - Keep test files focused on a single fixture or feature
 - Use JSDoc comments with `@requirements` tags when applicable
 - Property tests use `fast-check` and follow `*.prop.ts` naming
+- **Every test must have a unique TestCaseID** — see "Test Case ID Convention" above
+- **Every test must use `test.step()`** — break the test body into labeled steps for traceability in reports and traces

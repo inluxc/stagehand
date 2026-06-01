@@ -2084,3 +2084,133 @@ use: {
 | Organize tests by category | Skill 12 (Tags) |
 | Test across multiple systems | Skill 13 (Multi-Fixture) |
 | Test 2FA/MFA with OTP tokens | Skill 14 (OTP) |
+| Assign unique TestCaseIDs & test steps | Skill 17 (TestCaseID + Steps) |
+
+---
+
+## Skill 17: Assign Unique TestCaseIDs and Test Steps
+
+**When to use:** ALWAYS — every test that is generated must include a unique TestCaseID and structured test steps. This is mandatory for all test generation.
+
+**Purpose:** Ensures full traceability between test cases and requirements, enables filtering by ID, prevents duplicate test identifiers across the entire suite, and provides step-level failure tracking in reports.
+
+**Format:** `TC-XXX-NNN`
+
+| Category Code | Domain |
+|---|---|
+| `API` | OpenAPI / REST API tests |
+| `DB` | Database tests |
+| `KFK` | Kafka tests |
+| `RDS` | Redis tests |
+| `MDB` | MongoDB tests |
+| `GQL` | GraphQL tests |
+| `BRW` | Browser tests |
+| `MOB` | Mobile (Mobilewright) tests |
+| `OTP` | OTP/2FA tests |
+| `INT` | Integration (multi-fixture) tests |
+| `PROP` | Property-based tests |
+
+**Steps:**
+
+1. Determine the category code based on the fixture/domain being tested
+2. Search all existing `*.spec.ts` and `*.prop.ts` files for the highest existing number in that category (e.g., grep for `TC-API-` to find the last API test ID)
+3. Assign the next sequential number, zero-padded to 3 digits
+4. Place the TestCaseID in square brackets at the **start** of the test title
+5. Append the TestCaseID as a `@TC-XXX-NNN` tag at the **end** of the test title
+6. Structure the test body using `await test.step('Step N: description', async () => { ... })` for each logical action
+
+**Template:**
+
+```typescript
+import { test, expect } from '../../src';
+
+test.describe('Feature Name', () => {
+    test('[TC-API-001] GET /items — list all items returns 200 @TC-API-001', async ({ openApiClient }) => {
+        const { client } = openApiClient;
+
+        await test.step('Step 1: Send GET request to /items endpoint', async () => {
+            const response = await (client as any).listItems();
+            expect(response.status).toBe(200);
+        });
+
+        await test.step('Step 2: Verify response body is an array', async () => {
+            const response = await (client as any).listItems();
+            expect(response.data).toBeInstanceOf(Array);
+        });
+    });
+
+    test('[TC-API-002] POST /items — create item returns 201 @TC-API-002', async ({ openApiClient }) => {
+        const { client } = openApiClient;
+        let createdItem: any;
+
+        await test.step('Step 1: Send POST request with valid item data', async () => {
+            const response = await (client as any).createItem(null, {
+                name: 'New Item',
+                description: 'Created via test',
+            });
+            expect(response.status).toBe(201);
+            createdItem = response.data;
+        });
+
+        await test.step('Step 2: Verify response contains item with generated ID', async () => {
+            expect(createdItem).toHaveProperty('id');
+            expect(createdItem.name).toBe('New Item');
+        });
+    });
+
+    test('[TC-API-003] GET /items/:id — non-existent ID returns 404 @TC-API-003', async ({ openApiClient }) => {
+        const { client } = openApiClient;
+
+        await test.step('Step 1: Send GET request with non-existent ID', async () => {
+            try {
+                await (client as any).getItemById({ id: 'non-existent-id-999' });
+            } catch (error: any) {
+                expect(error.response.status).toBe(404);
+            }
+        });
+    });
+});
+```
+
+**Test Steps Rules:**
+
+1. **Every test must have steps** — use `await test.step('Step N: ...', async () => { ... })` to wrap each logical action
+2. **Naming convention:** `Step N: <verb phrase>` — use a clear action verb describing what the step does
+3. **Granularity:** Each step should represent one logical action or assertion group (not one line of code)
+4. **Steps appear in reports:** Playwright HTML reports, trace viewer, and CI logs show each step individually — a failed step pinpoints exactly where the test broke
+5. **Variables can span steps:** Declare variables outside steps and assign inside them when later steps need the result
+
+**Common step patterns:**
+
+| Step Purpose | Example Name |
+|---|---|
+| Setup / precondition | `Step 1: Seed test data into database` |
+| Navigation | `Step 2: Navigate to login page` |
+| User action | `Step 3: Fill in credentials and submit form` |
+| API call | `Step 2: Send POST request with payload` |
+| Assertion | `Step 4: Verify success message is displayed` |
+| Cleanup | `Step 5: Delete created test record` |
+
+**TestCaseID Rules:**
+
+1. **Uniqueness is mandatory** — no two tests in the entire project may share the same TestCaseID
+2. **Never reuse IDs** — even if a test is deleted, its ID is retired
+3. **Sequential within category** — always increment from the highest existing number
+4. **Both title and tag** — the ID must appear in `[TC-XXX-NNN]` at the start AND `@TC-XXX-NNN` at the end of the title string
+5. **Check before assigning** — always scan existing test files to find the current highest ID in the category before assigning new ones
+
+**Verification command:**
+
+```bash
+# Find all TestCaseIDs in the project and check for duplicates
+grep -roh 'TC-[A-Z]*-[0-9]*' tests/ | sort | uniq -d
+# Should return empty (no duplicates)
+```
+
+**Finding the next available ID:**
+
+```bash
+# Example: find highest API test case ID
+grep -roh 'TC-API-[0-9]*' tests/ | sort -t'-' -k3 -n | tail -1
+# Returns e.g. TC-API-042 → next is TC-API-043
+```
