@@ -320,7 +320,7 @@ jobs:
       - name: Wait for mock server
         run: |
           for i in $(seq 1 30); do
-            if node -e 'import("http").then(h=>{const r=h.default.get("http://localhost:4010",res=>{process.exit(res.statusCode<500?0:1)});r.on("error",()=>process.exit(1))}).catch(()=>process.exit(1))' 2>/dev/null; then
+            if wget -q --spider http://localhost:4010 2>/dev/null || wget -q -O /dev/null http://localhost:4010 2>/dev/null; then
               echo "Mock server is ready"
               exit 0
             fi
