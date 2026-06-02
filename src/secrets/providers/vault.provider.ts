@@ -11,7 +11,7 @@
  * Supports Vault Enterprise namespaces via the `namespace` option.
  */
 
-import { SecretsProvider } from '../provider.interface';
+import type { SecretsProvider } from '../provider.interface';
 import { SecretsError } from '../../errors';
 
 export interface VaultProviderOptions {

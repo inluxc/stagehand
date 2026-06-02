@@ -114,7 +114,7 @@ Request fixtures by name in the test function signature:
 import { test, expect } from '../../src';
 
 test.describe('Feature Name', () => {
-    test('[TC-XXX-001] descriptive test name @TC-XXX-001', async ({ fixtureName }) => {
+    test('[TC-XXX-001] descriptive test name', { tag: ['@TC-XXX-001'] }, async ({ fixtureName }) => {
         await test.step('Step 1: Set up test data', async () => {
             // Arrange — set up test data
         });
@@ -128,7 +128,7 @@ test.describe('Feature Name', () => {
         });
     });
 
-    test('[TC-XXX-002] another test case @TC-XXX-002', async ({ fixtureName }) => {
+    test('[TC-XXX-002] another test case', { tag: ['@TC-XXX-002'] }, async ({ fixtureName }) => {
         await test.step('Step 1: Prepare preconditions', async () => {
             // ...
         });
@@ -144,7 +144,7 @@ test.describe('Feature Name', () => {
 });
 ```
 
-> **Note:** Every test must include a unique `[TC-XXX-NNN]` at the start and `@TC-XXX-NNN` tag at the end of the title. Every test must use `test.step()` to break down the test into trackable steps. See "Test Case ID Convention" section for details.
+> **Note:** Every test must include a unique `[TC-XXX-NNN]` at the start of the title, and a `{ tag: ['@TC-XXX-NNN'] }` options object as the second argument. Every test must use `test.step()` to break down the test into trackable steps. See "Test Case ID Convention" section for details.
 
 ### Fixture API Quick Reference
 
@@ -379,8 +379,8 @@ Every generated test **must** include a unique TestCaseID in both the test title
 ### Rules
 
 1. **Uniqueness:** Each TestCaseID must be globally unique across ALL spec files in the project. Before assigning an ID, check existing test files to determine the next available number in the category.
-2. **Title format:** `test('[TC-XXX-NNN] descriptive test name', ...)`
-3. **Tag format:** Add `@TC-XXX-NNN` as a tag in the test title (Playwright grep-compatible).
+2. **Title format:** `test('[TC-XXX-NNN] descriptive test name', { tag: ['@TC-XXX-NNN'] }, async ...)`
+3. **Tag format:** Use Playwright's `{ tag: ['@TC-XXX-NNN'] }` options object as the second argument to `test()`.
 4. **Sequential numbering:** Numbers increment within each category (e.g., `TC-API-001`, `TC-API-002`, ...).
 5. **No reuse:** Never reuse a TestCaseID, even if the original test is deleted.
 6. **Test steps are mandatory:** Every test must use `test.step()` to break the test body into discrete, labeled steps. Steps appear in Playwright reports and traces, enabling precise failure tracking.
@@ -399,7 +399,7 @@ Every test body **must** be structured using `await test.step('Step N: descripti
 
 ```typescript
 test.describe('API — Users — Positive', () => {
-    test('[TC-API-001] GET /users — list all users returns 200 @TC-API-001', async ({ openApiClient }) => {
+    test('[TC-API-001] GET /users — list all users returns 200', { tag: ['@TC-API-001'] }, async ({ openApiClient }) => {
         await test.step('Step 1: Send GET request to /users', async () => {
             const { client } = openApiClient;
             const response = await (client as any).listUsers();
@@ -414,7 +414,7 @@ test.describe('API — Users — Positive', () => {
         });
     });
 
-    test('[TC-API-002] POST /users — create user with valid body returns 201 @TC-API-002', async ({ openApiClient }) => {
+    test('[TC-API-002] POST /users — create user with valid body returns 201', { tag: ['@TC-API-002'] }, async ({ openApiClient }) => {
         const { client } = openApiClient;
         let createdId: string;
 
@@ -434,7 +434,7 @@ test.describe('API — Users — Positive', () => {
 });
 
 test.describe('Database — Orders', () => {
-    test('[TC-DB-001] query active orders returns results @TC-DB-001', async ({ databaseClient }) => {
+    test('[TC-DB-001] query active orders returns results', { tag: ['@TC-DB-001'] }, async ({ databaseClient }) => {
         await test.step('Step 1: Execute SELECT query for active orders', async () => {
             const rows = await databaseClient.query<{ id: number; status: string }>(
                 'SELECT id, status FROM orders WHERE status = $1', ['active']
@@ -454,7 +454,7 @@ test.describe('Database — Orders', () => {
 });
 
 test.describe('Browser — Login — Functional', () => {
-    test('[TC-BRW-001] navigate to login and submit form @TC-BRW-001', async ({ page }) => {
+    test('[TC-BRW-001] navigate to login and submit form', { tag: ['@TC-BRW-001'] }, async ({ page }) => {
         await test.step('Step 1: Navigate to login page', async () => {
             await page.goto('/login');
             await expect(page.getByRole('heading', { name: 'Sign In' })).toBeVisible();

@@ -11,7 +11,7 @@ export { VaultSecretsProvider, type VaultProviderOptions } from './vault.provide
 export { AzureSecretsProvider, type AzureProviderOptions } from './azure.provider';
 export { EnvFileSecretsProvider, type EnvFileProviderOptions } from './env-file.provider';
 
-import { SecretsProvider } from '../provider.interface';
+import type { SecretsProvider } from '../provider.interface';
 import { AwsSecretsProvider, AwsProviderOptions } from './aws.provider';
 import { GitLabSecretsProvider, GitLabProviderOptions } from './gitlab.provider';
 import { VaultSecretsProvider, VaultProviderOptions } from './vault.provider';

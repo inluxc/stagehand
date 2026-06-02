@@ -5,7 +5,8 @@
 const dbType = process.env.PW_DB_TYPE;
 
 async function createPostgresSchema() {
-    const { Client } = require('pg');
+    const pg = await import('pg');
+    const Client = pg.default?.Client || pg.Client;
     const client = new Client({
         host: process.env.PW_DB_HOST,
         port: parseInt(process.env.PW_DB_PORT || '5432'),
@@ -26,8 +27,9 @@ async function createPostgresSchema() {
 }
 
 async function createMysqlSchema() {
-    const mysql = require('mysql2/promise');
-    const connection = await mysql.createConnection({
+    const mysql = await import('mysql2/promise');
+    const createConnection = mysql.default?.createConnection || mysql.createConnection;
+    const connection = await createConnection({
         host: process.env.PW_DB_HOST,
         port: parseInt(process.env.PW_DB_PORT || '3306'),
         database: process.env.PW_DB_NAME,
@@ -46,8 +48,9 @@ async function createMysqlSchema() {
 }
 
 async function createMssqlSchema() {
-    const sql = require('mssql');
-    const pool = await sql.connect({
+    const sql = await import('mssql');
+    const connect = sql.default?.connect || sql.connect;
+    const pool = await connect({
         server: process.env.PW_DB_HOST,
         port: parseInt(process.env.PW_DB_PORT || '1433'),
         database: process.env.PW_DB_NAME,
@@ -71,7 +74,8 @@ async function createMssqlSchema() {
 }
 
 async function createSqliteSchema() {
-    const Database = require('better-sqlite3');
+    const betterSqlite3 = await import('better-sqlite3');
+    const Database = betterSqlite3.default || betterSqlite3;
     const db = new Database(process.env.PW_DB_NAME);
     db.exec(`
         CREATE TABLE IF NOT EXISTS users (

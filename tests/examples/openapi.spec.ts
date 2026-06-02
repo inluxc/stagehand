@@ -22,63 +22,55 @@ test.describe('OpenAPI Fixture Examples', () => {
     // Skip when not running in CI where infrastructure is available.
     test.skip(!process.env.CI, 'Skipped: requires CI infrastructure');
 
-    test('initialize client and call an operation', async ({ openApiClient }) => {
-        // The openApiClient fixture provides:
-        //   - client: an Axios instance extended with operation methods from the spec
-        //   - api: the underlying OpenAPIClientAxios instance for advanced usage
-
+    test('[TC-API-001] initialize client and call an operation', { tag: ['@TC-API-001'] }, async ({ openApiClient }) => {
         const { client } = openApiClient;
 
-        // Call an operation defined in the OpenAPI spec by its operationId.
-        // The Petstore spec defines: operationId: "getInventory" (requires api_key header)
-        const response = await (client as any).getInventory(null, null, {
-            headers: { api_key: 'special-key' },
+        await test.step('Step 1: Call getInventory operation with api_key header', async () => {
+            const response = await (client as any).getInventory(null, null, {
+                headers: { api_key: 'special-key' },
+            });
+
+            expect(response.status).toBe(200);
+            expect(response.data).toBeDefined();
+            expect(typeof response.data).toBe('object');
         });
-
-        // Validate the response — getInventory returns a map of status to count
-        expect(response.status).toBe(200);
-        expect(response.data).toBeDefined();
-        expect(typeof response.data).toBe('object');
     });
 
-    test('call operation with parameters', async ({ openApiClient }) => {
+    test('[TC-API-002] call operation with parameters', { tag: ['@TC-API-002'] }, async ({ openApiClient }) => {
         const { client } = openApiClient;
 
-        // Operations with path parameters pass them as the first argument.
-        // The Petstore spec defines: operationId: "getOrderById" with path param {orderId}
-        // This endpoint has no security requirement.
-        const response = await (client as any).getOrderById({ orderId: 1 });
+        await test.step('Step 1: Call getOrderById with path parameter orderId=1', async () => {
+            const response = await (client as any).getOrderById({ orderId: 1 });
 
-        expect(response.status).toBe(200);
-        expect(response.data).toBeDefined();
-        expect(response.data.id).toBeDefined();
-    });
-
-    test('call operation with request body', async ({ openApiClient }) => {
-        const { client } = openApiClient;
-
-        // POST operations pass the request body as the second argument.
-        // The Petstore spec defines: operationId: "placeOrder" (no security requirement)
-        const response = await (client as any).placeOrder(null, {
-            petId: 1,
-            quantity: 1,
-            status: 'placed',
-            complete: true,
+            expect(response.status).toBe(200);
+            expect(response.data).toBeDefined();
+            expect(response.data.id).toBeDefined();
         });
-
-        // placeOrder returns 200 on success per the Petstore spec
-        expect(response.status).toBe(200);
-        expect(response.data).toBeDefined();
-        expect(response.data.petId).toBeDefined();
     });
 
-    test('access the underlying OpenAPIClientAxios instance', async ({ openApiClient }) => {
+    test('[TC-API-003] call operation with request body', { tag: ['@TC-API-003'] }, async ({ openApiClient }) => {
+        const { client } = openApiClient;
+
+        await test.step('Step 1: Call placeOrder with request body', async () => {
+            const response = await (client as any).placeOrder(null, {
+                petId: 1,
+                quantity: 1,
+                status: 'placed',
+                complete: true,
+            });
+
+            expect(response.status).toBe(200);
+            expect(response.data).toBeDefined();
+            expect(response.data.petId).toBeDefined();
+        });
+    });
+
+    test('[TC-API-004] access the underlying OpenAPIClientAxios instance', { tag: ['@TC-API-004'] }, async ({ openApiClient }) => {
         const { api } = openApiClient;
 
-        // The api instance gives access to the parsed OpenAPI document
-        // and can be used for advanced scenarios like inspecting available operations.
-        const operations = api.getOperations();
-
-        expect(operations.length).toBeGreaterThan(0);
+        await test.step('Step 1: Retrieve operations from the parsed OpenAPI document', async () => {
+            const operations = api.getOperations();
+            expect(operations.length).toBeGreaterThan(0);
+        });
     });
 });

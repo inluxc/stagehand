@@ -6,7 +6,7 @@
  * This implementation uses a stub that throws if the SDK is not available.
  */
 
-import { SecretsProvider } from '../provider.interface';
+import type { SecretsProvider } from '../provider.interface';
 import { SecretsError } from '../../errors';
 
 export interface AwsProviderOptions {

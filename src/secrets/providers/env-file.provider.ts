@@ -6,7 +6,7 @@
  * are not available.
  */
 
-import { SecretsProvider } from '../provider.interface';
+import type { SecretsProvider } from '../provider.interface';
 import { SecretsError } from '../../errors';
 import { EnvLoader } from '../../config/env-loader';
 

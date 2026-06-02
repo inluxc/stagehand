@@ -11,7 +11,7 @@
 
 import { SecretsError } from '../errors';
 import { FrameworkConfig, SecretsConfig } from '../config/schema';
-import { SecretsProvider } from './provider.interface';
+import type { SecretsProvider } from './provider.interface';
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 

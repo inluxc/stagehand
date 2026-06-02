@@ -19,59 +19,51 @@ test.describe('Kafka Fixture Examples', () => {
     // Skip them when infrastructure is not available.
     test.skip(!process.env.CI, 'Skipped: requires CI infrastructure');
 
-    test('produce messages to a topic', async ({ kafkaClient }) => {
-        // The kafkaClient fixture provides:
-        //   - produce(topic, messages): send messages to a Kafka topic
-        //   - consume(topic, options?): read messages from a topic
-        //   - disconnect(): manually disconnect (handled automatically on teardown)
-
-        // Produce messages with optional keys
-        await kafkaClient.produce('test-events', [
-            { key: 'user-1', value: JSON.stringify({ event: 'login', userId: '1' }) },
-            { key: 'user-2', value: JSON.stringify({ event: 'signup', userId: '2' }) },
-        ]);
-
-        // Messages are sent asynchronously — produce() resolves when the broker acknowledges
+    test('[TC-KFK-001] produce messages to a topic', { tag: ['@TC-KFK-001'] }, async ({ kafkaClient }) => {
+        await test.step('Step 1: Produce two messages with keys to test-events topic', async () => {
+            await kafkaClient.produce('test-events', [
+                { key: 'user-1', value: JSON.stringify({ event: 'login', userId: '1' }) },
+                { key: 'user-2', value: JSON.stringify({ event: 'signup', userId: '2' }) },
+            ]);
+        });
     });
 
-    test('consume messages from a topic', async ({ kafkaClient }) => {
+    test('[TC-KFK-002] consume messages from a topic', { tag: ['@TC-KFK-002'] }, async ({ kafkaClient }) => {
         const topic = 'test-notifications';
 
-        // First, produce some messages
-        await kafkaClient.produce(topic, [
-            { key: 'alert-1', value: 'System maintenance scheduled' },
-            { key: 'alert-2', value: 'New feature released' },
-        ]);
-
-        // Consume messages with options:
-        //   - timeout: max wait time in ms (default: 30000)
-        //   - count: max number of messages to consume
-        //   - fromBeginning: start from the earliest offset
-        const messages = await kafkaClient.consume(topic, {
-            timeout: 10000,
-            count: 2,
-            fromBeginning: true,
+        await test.step('Step 1: Produce messages to the topic', async () => {
+            await kafkaClient.produce(topic, [
+                { key: 'alert-1', value: 'System maintenance scheduled' },
+                { key: 'alert-2', value: 'New feature released' },
+            ]);
         });
 
-        // Each message includes key, value, topic, partition, and offset
-        expect(messages.length).toBeGreaterThan(0);
+        await test.step('Step 2: Consume messages with timeout and fromBeginning options', async () => {
+            const messages = await kafkaClient.consume(topic, {
+                timeout: 10000,
+                count: 2,
+                fromBeginning: true,
+            });
 
-        for (const msg of messages) {
-            expect(msg.topic).toBe(topic);
-            expect(msg.value).toBeDefined();
-            expect(msg.partition).toBeGreaterThanOrEqual(0);
-            expect(msg.offset).toBeDefined();
-        }
+            expect(messages.length).toBeGreaterThan(0);
+
+            for (const msg of messages) {
+                expect(msg.topic).toBe(topic);
+                expect(msg.value).toBeDefined();
+                expect(msg.partition).toBeGreaterThanOrEqual(0);
+                expect(msg.offset).toBeDefined();
+            }
+        });
     });
 
-    test('consume returns empty array on timeout', async ({ kafkaClient }) => {
-        // If no messages arrive within the timeout, consume returns an empty array
-        // (it does NOT throw an error)
-        const messages = await kafkaClient.consume('empty-topic', {
-            timeout: 2000,
-            fromBeginning: true,
-        });
+    test('[TC-KFK-003] consume returns empty array on timeout', { tag: ['@TC-KFK-003'] }, async ({ kafkaClient }) => {
+        await test.step('Step 1: Consume from an empty topic with short timeout', async () => {
+            const messages = await kafkaClient.consume('empty-topic', {
+                timeout: 2000,
+                fromBeginning: true,
+            });
 
-        expect(messages).toEqual([]);
+            expect(messages).toEqual([]);
+        });
     });
 });

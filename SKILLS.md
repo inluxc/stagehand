@@ -2116,7 +2116,7 @@ use: {
 2. Search all existing `*.spec.ts` and `*.prop.ts` files for the highest existing number in that category (e.g., grep for `TC-API-` to find the last API test ID)
 3. Assign the next sequential number, zero-padded to 3 digits
 4. Place the TestCaseID in square brackets at the **start** of the test title
-5. Append the TestCaseID as a `@TC-XXX-NNN` tag at the **end** of the test title
+5. Add the TestCaseID as a Playwright tag using `{ tag: ['@TC-XXX-NNN'] }` as the second argument to `test()`
 6. Structure the test body using `await test.step('Step N: description', async () => { ... })` for each logical action
 
 **Template:**
@@ -2125,7 +2125,7 @@ use: {
 import { test, expect } from '../../src';
 
 test.describe('Feature Name', () => {
-    test('[TC-API-001] GET /items — list all items returns 200 @TC-API-001', async ({ openApiClient }) => {
+    test('[TC-API-001] GET /items — list all items returns 200', { tag: ['@TC-API-001'] }, async ({ openApiClient }) => {
         const { client } = openApiClient;
 
         await test.step('Step 1: Send GET request to /items endpoint', async () => {
@@ -2139,7 +2139,7 @@ test.describe('Feature Name', () => {
         });
     });
 
-    test('[TC-API-002] POST /items — create item returns 201 @TC-API-002', async ({ openApiClient }) => {
+    test('[TC-API-002] POST /items — create item returns 201', { tag: ['@TC-API-002'] }, async ({ openApiClient }) => {
         const { client } = openApiClient;
         let createdItem: any;
 
@@ -2158,7 +2158,7 @@ test.describe('Feature Name', () => {
         });
     });
 
-    test('[TC-API-003] GET /items/:id — non-existent ID returns 404 @TC-API-003', async ({ openApiClient }) => {
+    test('[TC-API-003] GET /items/:id — non-existent ID returns 404', { tag: ['@TC-API-003'] }, async ({ openApiClient }) => {
         const { client } = openApiClient;
 
         await test.step('Step 1: Send GET request with non-existent ID', async () => {
@@ -2196,7 +2196,7 @@ test.describe('Feature Name', () => {
 1. **Uniqueness is mandatory** — no two tests in the entire project may share the same TestCaseID
 2. **Never reuse IDs** — even if a test is deleted, its ID is retired
 3. **Sequential within category** — always increment from the highest existing number
-4. **Both title and tag** — the ID must appear in `[TC-XXX-NNN]` at the start AND `@TC-XXX-NNN` at the end of the title string
+4. **Title and tag** — the ID must appear in `[TC-XXX-NNN]` at the start of the title AND as `{ tag: ['@TC-XXX-NNN'] }` options object (second argument to `test()`)
 5. **Check before assigning** — always scan existing test files to find the current highest ID in the category before assigning new ones
 
 **Verification command:**
