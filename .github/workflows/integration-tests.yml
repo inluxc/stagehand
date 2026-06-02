@@ -315,14 +315,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: npm ci
+      - name: Download OpenAPI spec locally
+        run: curl -s https://petstore.swagger.io/v2/swagger.json -o /tmp/petstore-spec.json
       - name: Start Prism mock server
         run: |
-          npx --yes @stoplight/prism-cli mock https://petstore.swagger.io/v2/swagger.json --port 4010 --host 0.0.0.0 &
+          npx --yes @stoplight/prism-cli mock /tmp/petstore-spec.json --port 4010 --host 0.0.0.0 --errors false &
           echo "Prism PID: $!"
       - name: Wait for mock server
         run: |
           for i in $(seq 1 60); do
-            if curl -s -o /dev/null -w "%{http_code}" http://localhost:4010/ 2>/dev/null | grep -qE "^[0-4]"; then
+            if curl -s -o /dev/null -w "%{http_code}" http://localhost:4010/store/inventory 2>/dev/null | grep -qE "^[0-4]"; then
               echo "Mock server is ready"
               exit 0
             fi
@@ -361,14 +363,16 @@ jobs:
         with:
           node-version: "24"
       - run: npm ci
+      - name: Download OpenAPI spec locally
+        run: curl -s https://petstore.swagger.io/v2/swagger.json -o /tmp/petstore-spec.json
       - name: Start Prism mock server
         run: |
-          npx --yes @stoplight/prism-cli mock https://petstore.swagger.io/v2/swagger.json --port 4010 --host 0.0.0.0 &
+          npx --yes @stoplight/prism-cli mock /tmp/petstore-spec.json --port 4010 --host 0.0.0.0 --errors false &
           echo "Prism PID: $!"
       - name: Wait for mock server
         run: |
           for i in $(seq 1 60); do
-            if curl -s -o /dev/null -w "%{http_code}" http://localhost:4010/ 2>/dev/null | grep -qE "^[0-4]"; then
+            if curl -s -o /dev/null -w "%{http_code}" http://localhost:4010/store/inventory 2>/dev/null | grep -qE "^[0-4]"; then
               echo "Mock server is ready"
               exit 0
             fi
