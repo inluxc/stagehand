@@ -24,9 +24,10 @@ test.describe('OpenAPI Fixture Examples', () => {
 
     test('[TC-API-001] call getInventory and verify response structure', { tag: ['@TC-API-001'] }, async ({ openApiClient }) => {
         const { client } = openApiClient;
+        let response: any;
 
         await test.step('Step 1: Call getInventory operation with api_key header', async () => {
-            const response = await (client as any).getInventory(null, null, {
+            response = await (client as any).getInventory(null, null, {
                 headers: { api_key: 'special-key' },
             });
 
@@ -36,10 +37,6 @@ test.describe('OpenAPI Fixture Examples', () => {
         });
 
         await test.step('Step 2: Verify inventory response is a key-value map of status to count', async () => {
-            const response = await (client as any).getInventory(null, null, {
-                headers: { api_key: 'special-key' },
-            });
-
             expect(response.data).not.toBeNull();
             for (const [key, value] of Object.entries(response.data)) {
                 expect(typeof key).toBe('string');
