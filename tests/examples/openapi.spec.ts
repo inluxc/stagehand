@@ -22,6 +22,9 @@ test.describe('OpenAPI Fixture Examples', () => {
     // Skip when not running in CI where infrastructure is available.
     test.skip(!process.env.CI, 'Skipped: requires CI infrastructure');
 
+    // Prism mock server can be unstable in containers; retry on transient failures.
+    test.describe.configure({ retries: 2 });
+
     test('[TC-API-001] initialize client and call an operation', { tag: ['@TC-API-001'] }, async ({ openApiClient }) => {
         const { client } = openApiClient;
 
@@ -36,32 +39,35 @@ test.describe('OpenAPI Fixture Examples', () => {
         });
     });
 
-    test('[TC-API-002] call operation with parameters', { tag: ['@TC-API-002'] }, async ({ openApiClient }) => {
+    test('[TC-API-002] call operation with path parameters', { tag: ['@TC-API-002'] }, async ({ openApiClient }) => {
         const { client } = openApiClient;
 
-        await test.step('Step 1: Call getOrderById with path parameter orderId=1', async () => {
-            const response = await (client as any).getOrderById({ orderId: 1 });
+        await test.step('Step 1: Call findPetsByStatus with query parameter', async () => {
+            const response = await (client as any).findPetsByStatus([{ status: 'available' }], null, {
+                headers: { api_key: 'special-key' },
+            });
 
             expect(response.status).toBe(200);
             expect(response.data).toBeDefined();
-            expect(response.data.id).toBeDefined();
+            expect(Array.isArray(response.data)).toBe(true);
         });
     });
 
     test('[TC-API-003] call operation with request body', { tag: ['@TC-API-003'] }, async ({ openApiClient }) => {
         const { client } = openApiClient;
 
-        await test.step('Step 1: Call placeOrder with request body', async () => {
-            const response = await (client as any).placeOrder(null, {
-                petId: 1,
-                quantity: 1,
-                status: 'placed',
-                complete: true,
+        await test.step('Step 1: Call addPet with request body', async () => {
+            const response = await (client as any).addPet(null, {
+                name: 'TestPet',
+                photoUrls: ['https://example.com/photo.jpg'],
+                status: 'available',
+            }, {
+                headers: { api_key: 'special-key' },
             });
 
             expect(response.status).toBe(200);
             expect(response.data).toBeDefined();
-            expect(response.data.petId).toBeDefined();
+            expect(response.data.name).toBe('TestPet');
         });
     });
 

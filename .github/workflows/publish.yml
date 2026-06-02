@@ -88,6 +88,6 @@ jobs:
         run: |
           echo "## 📦 Published to npm" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Package:** $(node -p "require('./package.json').name")" >> $GITHUB_STEP_SUMMARY
-          echo "- **Version:** $(node -p "require('./package.json').version")" >> $GITHUB_STEP_SUMMARY
+          echo "- **Package:** $(node --input-type=module -e "import pkg from './package.json' with { type: 'json' }; console.log(pkg.name);")" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** $(node --input-type=module -e "import pkg from './package.json' with { type: 'json' }; console.log(pkg.version);")" >> $GITHUB_STEP_SUMMARY
           echo "- **Tag:** ${GITHUB_REF_NAME:-manual}" >> $GITHUB_STEP_SUMMARY
