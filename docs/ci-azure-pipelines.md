@@ -111,6 +111,12 @@ resources:
         KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
         CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
       options: --health-cmd "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092" --health-interval 10s --health-retries 12
+    - container: rabbitmq_svc
+      image: rabbitmq:4
+      env:
+        RABBITMQ_DEFAULT_USER: testuser
+        RABBITMQ_DEFAULT_PASS: testpass
+      options: --health-cmd "rabbitmq-diagnostics -q check_port_connectivity" --health-interval 5s --health-retries 20
 
 pool:
   vmImage: ubuntu-latest
@@ -182,6 +188,17 @@ jobs:
       - template: ci/playwright-steps.yml
         parameters:
           projects: --project=integration-kafka
+
+  - job: rabbitmq
+    container: node
+    services:
+      rabbitmq: rabbitmq_svc
+    variables:
+      PW_AMQP_URL: amqp://testuser:testpass@rabbitmq:5672
+    steps:
+      - template: ci/playwright-steps.yml
+        parameters:
+          projects: --project=integration-amqp
 
   - job: browser
     container: playwright

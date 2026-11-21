@@ -18,6 +18,9 @@
                     "localhost:9092"
                 ]
             },
+            "amqp": {
+                "url": "amqp://testuser:testpass@localhost:5672"
+            },
             "redis": {
                 "host": "localhost",
                 "port": 6379

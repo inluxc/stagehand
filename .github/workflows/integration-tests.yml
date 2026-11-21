@@ -492,6 +492,48 @@ jobs:
           path: test-results/
           retention-days: 7
 
+  test-rabbitmq:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container: node:24
+    services:
+      rabbitmq:
+        image: rabbitmq:4
+        env:
+          RABBITMQ_DEFAULT_USER: testuser
+          RABBITMQ_DEFAULT_PASS: testpass
+        ports:
+          - 5672:5672
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q check_port_connectivity"
+          --health-interval 5s
+          --health-timeout 30s
+          --health-retries 20
+    env:
+      CI: true
+      PW_AMQP_URL: amqp://testuser:testpass@rabbitmq:5672
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/npm-install
+      - name: Validate environment variables
+        run: bash .github/scripts/validate-env.sh PW_AMQP_URL
+      - name: Run RabbitMQ integration tests
+        run: npx playwright test --project=integration-amqp
+      - name: Upload HTML report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-report-rabbitmq
+          path: playwright-report/
+          retention-days: 7
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-rabbitmq
+          path: test-results/
+          retention-days: 7
+
   test-openapi:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -582,6 +624,7 @@ jobs:
       PW_MONGODB_CONTAINER: "true"
       PW_NEO4J_CONTAINER: "true"
       PW_KAFKA_CONTAINER: "true"
+      PW_AMQP_CONTAINER: "true"
       PW_INBOX_CONTAINER: "true"
       PW_MOCK_CONTAINER: "true"
     steps:

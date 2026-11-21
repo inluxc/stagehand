@@ -31,6 +31,7 @@ Ports are published on `127.0.0.1`. Tests running on the host use `localhost`. T
 | MongoDB | `mongodb` | `PW_MONGODB_HOST=localhost` `PW_MONGODB_DATABASE=testdb` | `PW_MONGODB_HOST=mongodb` |
 | Neo4j | `neo4j` | `PW_NEO4J_URI=bolt://localhost:7687` `PW_NEO4J_USERNAME=neo4j` `PW_NEO4J_PASSWORD=testpassword` | `PW_NEO4J_URI=bolt://neo4j:7687` |
 | Kafka | `kafka` | `PW_KAFKA_BROKERS=localhost:9092` | `PW_KAFKA_BROKERS=kafka:19092` |
+| RabbitMQ | `rabbitmq` | `PW_AMQP_URL=amqp://testuser:testpass@localhost:5672` | `PW_AMQP_URL=amqp://testuser:testpass@rabbitmq:5672` |
 | WireMock (mock server) | `wiremock` | `PW_MOCK_URL=http://localhost:8089` | `PW_MOCK_URL=http://wiremock:8080` |
 | Mailpit (inbox) | `mailpit` | `PW_INBOX_URL=http://localhost:8025`; the app sends SMTP to `localhost:1025` | `PW_INBOX_URL=http://mailpit:8025`; SMTP `mailpit:1025` |
 

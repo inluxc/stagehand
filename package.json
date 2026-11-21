@@ -1,7 +1,7 @@
 {
     "name": "@inluxc/propmaster",
     "version": "1.0.0",
-    "description": "Playwright Test fixtures for the services behind your UI: OpenAPI, GraphQL, SQL databases, MongoDB, Neo4j, Kafka, Redis, OTP and Appium/GADS.",
+    "description": "Playwright Test fixtures for the services behind your UI: OpenAPI, GraphQL, SQL databases, MongoDB, Neo4j, Kafka, RabbitMQ, Redis, OTP and Appium/GADS.",
     "type": "module",
     "bin": {
         "propmaster": "dist/src/cli/init.js"
@@ -63,10 +63,11 @@
         "docs:build": "npm --prefix docs ci && npm --prefix docs run build"
     },
     "peerDependencies": {
-        "@playwright/test": ">=1.50.0",
         "@faker-js/faker": "^10.6.0",
+        "@playwright/test": ">=1.50.0",
         "ajv": "^8.17.1",
         "ajv-formats": "^3.0.1",
+        "amqplib": "^2.2.0",
         "better-sqlite3": "^13.2.0",
         "graphql": "^16.15.0",
         "graphql-request": "^7.4.0",
@@ -91,6 +92,9 @@
             "optional": true
         },
         "ajv-formats": {
+            "optional": true
+        },
+        "amqplib": {
             "optional": true
         },
         "better-sqlite3": {
@@ -150,6 +154,7 @@
         "@types/pg": "^8.23.1",
         "ajv": "^8.20.0",
         "ajv-formats": "^3.0.1",
+        "amqplib": "^2.3.1",
         "better-sqlite3": "^13.2.0",
         "fast-check": "^4.10.3",
         "graphql": "^16.15.0",
@@ -180,6 +185,8 @@
         "mongodb",
         "neo4j",
         "kafka",
+        "rabbitmq",
+        "amqp",
         "redis",
         "mobile",
         "appium",

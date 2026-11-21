@@ -281,6 +281,46 @@ export class ConfigLoader {
                 if (!cfg.kafka) cfg.kafka = { brokers: [] };
                 cfg.kafka.brokers = val.split(',').map(b => b.trim());
             },
+            'PW_AMQP_URL': (cfg, val) => {
+                cfg.amqp ??= {};
+                cfg.amqp.url = val;
+            },
+            'PW_AMQP_HOST': (cfg, val) => {
+                cfg.amqp ??= {};
+                cfg.amqp.host = val;
+            },
+            'PW_AMQP_PORT': (cfg, val) => {
+                cfg.amqp ??= {};
+                cfg.amqp.port = parseInt(val, 10);
+            },
+            'PW_AMQP_USERNAME': (cfg, val) => {
+                cfg.amqp ??= {};
+                cfg.amqp.username = val;
+            },
+            'PW_AMQP_PASSWORD': (cfg, val) => {
+                cfg.amqp ??= {};
+                cfg.amqp.password = val;
+            },
+            'PW_AMQP_VHOST': (cfg, val) => {
+                cfg.amqp ??= {};
+                cfg.amqp.vhost = val;
+            },
+            'PW_AMQP_TLS': (cfg, val) => {
+                cfg.amqp ??= {};
+                cfg.amqp.tls = val.toLowerCase() === 'true';
+            },
+            'PW_AMQP_HEARTBEAT': (cfg, val) => {
+                cfg.amqp ??= {};
+                cfg.amqp.heartbeat = parseInt(val, 10);
+            },
+            'PW_AMQP_TIMEOUT': (cfg, val) => {
+                cfg.amqp ??= {};
+                cfg.amqp.timeout = parseInt(val, 10);
+            },
+            'PW_AMQP_CONTAINER': (cfg, val) => {
+                cfg.amqp ??= {};
+                cfg.amqp.container = parseContainerEnv(val);
+            },
             'PW_REDIS_HOST': (cfg, val) => {
                 if (!cfg.redis) cfg.redis = { host: '', port: 6379 };
                 cfg.redis.host = val;

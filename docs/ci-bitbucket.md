@@ -47,6 +47,12 @@ definitions:
         KAFKA_NUM_PARTITIONS: "1"
         KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
         CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+    rabbitmq:
+      image: rabbitmq:4
+      memory: 1024
+      variables:
+        RABBITMQ_DEFAULT_USER: testuser
+        RABBITMQ_DEFAULT_PASS: testpass
 
 
 pipelines:
@@ -121,6 +127,19 @@ pipelines:
                 - *npm-ci
                 - wait_for 9092
                 - npx playwright test --project=integration-kafka --reporter=line,junit
+              artifacts: [playwright-report/**]
+
+          - step:
+              name: RabbitMQ
+              caches: [npm]
+              services: [rabbitmq]
+              script:
+                - *wait-for
+                - *junit
+                - export PW_AMQP_URL=amqp://testuser:testpass@localhost:5672
+                - *npm-ci
+                - wait_for 5672
+                - npx playwright test --project=integration-amqp --reporter=line,junit
               artifacts: [playwright-report/**]
 
           - step:

@@ -46,6 +46,7 @@ Every job starts at the same time, so a run takes about as long as its slowest j
 | `test-mongodb` | `integration-mongodb` | `mongo:7` | MongoDB fixture |
 | `test-neo4j` | `integration-neo4j` | `neo4j:5` | Neo4j fixture |
 | `test-kafka` | `integration-kafka` | `apache/kafka:latest` (KRaft) | Kafka fixture |
+| `test-rabbitmq` | `integration-amqp` | `rabbitmq:4` | RabbitMQ (AMQP) fixture |
 | `test-inbox` | `integration-inbox` | `axllent/mailpit:latest` | Inbox fixture (email) |
 | `test-mocks` | `integration-mocks` | `wiremock/wiremock:3.13.2` | Mock-server fixture (third-party APIs) |
 | `test-openapi` | `openapi` | Prism mock server (started in a step) | OpenAPI fixture |
@@ -272,6 +273,24 @@ services:
       --health-interval 10s --health-timeout 60s --health-retries 6
 env:
   PW_KAFKA_BROKERS: kafka:9092
+```
+
+### RabbitMQ
+
+Create a user: the image's `guest` user can only connect from inside the container. `check_port_connectivity` waits for the AMQP port, which opens after `rabbitmq-diagnostics ping` already passes:
+
+```yaml
+services:
+  rabbitmq:
+    image: rabbitmq:4
+    env:
+      RABBITMQ_DEFAULT_USER: testuser
+      RABBITMQ_DEFAULT_PASS: testpass
+    options: >-
+      --health-cmd "rabbitmq-diagnostics -q check_port_connectivity"
+      --health-interval 5s --health-timeout 30s --health-retries 20
+env:
+  PW_AMQP_URL: amqp://testuser:testpass@rabbitmq:5672
 ```
 
 ### OpenAPI against a mock server

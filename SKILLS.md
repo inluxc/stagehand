@@ -32,6 +32,7 @@ This document teaches AI agents the step-by-step skills needed to create tests w
 | `API` | OpenAPI / REST API tests |
 | `DB` | Database tests |
 | `KFK` | Kafka tests |
+| `AMQ` | RabbitMQ / AMQP tests |
 | `RDS` | Redis tests |
 | `MDB` | MongoDB tests |
 | `NEO` | Neo4j tests |
@@ -2646,6 +2647,67 @@ test('[TC-MCK-NNN] a declined card shows an error and is not retried', { tag: ['
 
 ---
 
+## Skill 22: Test a RabbitMQ (AMQP) Flow
+
+**When to use:** The application publishes events to, or consumes commands from, RabbitMQ (or another AMQP 0-9-1 broker).
+
+**Steps:**
+
+1. Use the `amqpClient` fixture (`PW_AMQP_URL`, or `PW_AMQP_CONTAINER=true`). `AmqpSteps` from `src/steps` wraps the calls in `test.step()`.
+2. To check what the app publishes, `listen(exchange, bindingKey)` **before** the action. The listener is a temporary queue of the test's own, so the app's queues keep their messages. Never `consume()` from the app's own queues.
+3. Match messages on a value unique to the test (an ID it created, a correlation ID): parallel tests share the exchange.
+4. Declare test-owned queues and exchanges with `assertQueue` / `assertExchange` / `bindQueue`; they're removed after the test. On RabbitMQ 4 don't pass `durable: false` to `assertQueue` (refused unless `exclusive`).
+5. Get IDs with `npm run next-id -- AMQ <count>`.
+
+**Template:**
+
+```typescript
+import { test, expect } from '@inluxc/propmaster';
+
+test.describe('RabbitMQ — Orders', () => {
+    test('[TC-AMQ-NNN] placing an order publishes order.created', { tag: ['@TC-AMQ-NNN'] }, async ({ amqpClient, openApiClient }) => {
+        const listener = await amqpClient.listen('orders', 'order.*');
+        let orderId = '';
+
+        await test.step('Step 1: Place an order through the API', async () => {
+            const response = await (openApiClient.client as any).createOrder(null, { sku: 'SKU-1', quantity: 2 });
+            expect(response.status).toBe(201);
+            orderId = response.data.id;
+        });
+
+        await test.step('Step 2: Verify the order.created event for this order', async () => {
+            const event = await listener.waitForMessage((m) => m.json<{ orderId: string }>().orderId === orderId);
+            expect(event.routingKey).toBe('order.created');
+            expect(event.json()).toMatchObject({ orderId, quantity: 2 });
+        });
+    });
+
+    test('[TC-AMQ-NNN] a payment event marks the order paid', { tag: ['@TC-AMQ-NNN'] }, async ({ amqpClient, databaseClient, testData }) => {
+        const orderId = testData.unique('ord');
+
+        await test.step('Step 1: Publish the payment.captured event', async () => {
+            // Waits for the broker's confirm; throws if no queue is bound for the routing key
+            await amqpClient.publish('payments', 'payment.captured', { orderId, amount: 4200 }, { correlationId: orderId });
+        });
+
+        await test.step('Step 2: Verify the order is marked paid', async () => {
+            await expect.poll(async () => {
+                const [row] = await databaseClient.query<{ status: string }>('SELECT status FROM orders WHERE id = $1', [orderId]);
+                return row?.status;
+            }, { timeout: 10_000 }).toBe('paid');
+        });
+    });
+});
+```
+
+**Key points:**
+- `waitForMessage()` throws on timeout and lists what arrived instead: read it before changing the test. `listener.messages({ count })` returns what arrived without throwing.
+- A string body is sent as `text/plain`, an object as JSON; `m.body` is the UTF-8 text, `m.json()` parses it, `m.headers` / `m.properties` hold the rest.
+- `consume(queue, { count })` takes and acknowledges messages; `purge(queue)` empties a queue; `checkQueue(queue)` gives `{ messageCount, consumerCount }` or `null`.
+- Headers exchanges: `listen(exchange, '', { arguments: { 'x-match': 'all', type: 'order' } })`.
+
+---
+
 ## Quick Decision Guide
 
 | I want to... | Use Skill |
@@ -2654,6 +2716,7 @@ test('[TC-MCK-NNN] a declined card shows an error and is not retried', { tag: ['
 | Test a REST API endpoint | Skill 1 (OpenAPI) |
 | Query or modify database records | Skill 2 (Database) |
 | Test event publishing/consuming | Skill 3 (Kafka) |
+| Test RabbitMQ events or commands | Skill 22 (RabbitMQ) |
 | Test caching or pub/sub | Skill 4 (Redis) |
 | Test a native mobile app (Appium) | Skill 5 (Appium) |
 | Test document storage or aggregations | Skill 6 (MongoDB) |

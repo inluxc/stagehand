@@ -40,7 +40,7 @@ A reusable Playwright test framework with an extensible fixture architecture for
 - **Mobile Testing:** Appium via WebdriverIO (`webdriverio ^9.33.1`) — local Appium, grids, cloud farms, and GADS device farms
 - **API Testing:** OpenAPI Client Axios (`openapi-client-axios ^7.9.1`)
 - **Database:** PostgreSQL (`pg`), MySQL (`mysql2`), MSSQL (`mssql`), SQLite (`better-sqlite3`)
-- **Messaging:** KafkaJS (`kafkajs ^2.2.4`)
+- **Messaging:** KafkaJS (`kafkajs ^2.2.4`), amqplib for RabbitMQ / AMQP 0-9-1 (`amqplib ^2.2.0`)
 - **Cache:** ioredis (`ioredis ^6.0.0`)
 - **MongoDB:** mongodb (`mongodb ^7.x`)
 - **Neo4j:** neo4j-driver (`neo4j-driver ^6.3.2`)
@@ -72,6 +72,7 @@ src/
 │   ├── database.fixture.ts     # Database client fixture (pg/mysql/sqlite)
 │   ├── graphql.fixture.ts      # GraphQL client fixture (queries, mutations, rawRequest)
 │   ├── kafka.fixture.ts        # Kafka producer/consumer fixture
+│   ├── amqp.fixture.ts         # RabbitMQ / AMQP fixture (publish, listen, consume, purge)
 │   ├── mongodb.fixture.ts      # MongoDB client fixture (CRUD + aggregation)
 │   ├── neo4j.fixture.ts        # Neo4j graph client fixture (Cypher read/write/transactions)
 │   ├── redis.fixture.ts        # Redis client fixture
@@ -108,6 +109,7 @@ tests/
 │   ├── database.spec.ts
 │   ├── graphql.spec.ts
 │   ├── kafka.spec.ts
+│   ├── amqp.spec.ts
 │   ├── mongodb.spec.ts
 │   ├── neo4j.spec.ts
 │   ├── redis.spec.ts
@@ -142,6 +144,7 @@ import { test, expect } from '../../src/fixtures';
 | MongoDB | `*.spec.ts` | `tests/examples/` or custom dir |
 | Neo4j | `*.spec.ts` | `tests/examples/` or custom dir |
 | Kafka | `*.spec.ts` | `tests/examples/` or custom dir |
+| RabbitMQ (AMQP) | `*.spec.ts` | `tests/examples/` or custom dir |
 | Redis | `*.spec.ts` | `tests/examples/` or custom dir |
 | Appium (incl. GADS) | `*.spec.ts` | `tests/examples/` or custom dir |
 | Browser | `*.spec.ts` | `tests/examples/` or custom dir |
@@ -159,6 +162,7 @@ Request fixtures by name in the test function signature:
 | `mongoDbClient` | `MongoDbClient` | MongoDB with `find`, `findOne`, `insertOne`, `insertMany`, `updateOne`, `updateMany`, `deleteOne`, `deleteMany`, `aggregate` |
 | `neo4jClient` | `Neo4jClient` | Neo4j with `run<T>(cypher, params?)`, `write(cypher, params?)`, `executeInTransaction(fn)`, `close()` |
 | `kafkaClient` | `KafkaClient` | Kafka with `produce(topic, messages)` and `consume(topic, options?)` |
+| `amqpClient` | `AmqpClient` | RabbitMQ / AMQP: `publish`, `sendToQueue`, `listen(exchange, key)` (temporary queue, doesn't take the app's messages), `consume`, `purge`, `checkQueue`, `assertQueue`/`assertExchange`/`bindQueue` (removed after the test) |
 | `redisClient` | `RedisClient` | Redis with `get`, `set`, `del`, `publish`, `subscribe` |
 | `otpClient` | `OtpClient` | OTP with `generateTotp`, `verifyTotp`, `generateHotp`, `verifyHotp`, `generateSecret`, `generateKeyUri` |
 | `inboxClient` | `InboxClient` | Test mail server (Mailpit): `uniqueAddress`, `waitForMessage`, `messages`, `extractCode`, `extractLink`, `deleteAll`, `send`, `smtp` |
@@ -255,6 +259,21 @@ testData.cleanup('delete API project', () => api.deleteProject(id));   // anythi
 ```typescript
 await kafkaClient.produce('topic', [{ key: 'k', value: JSON.stringify(data) }]);
 const messages = await kafkaClient.consume('topic', { count: 1, timeout: 10000, fromBeginning: true });
+```
+
+**AMQP (RabbitMQ) Client:**
+```typescript
+// Listen BEFORE the action: a temporary exclusive queue bound to the exchange; the app's queues keep their copies
+const listener = await amqpClient.listen('orders', 'order.*');           // bindingKey defaults to '#'
+await amqpClient.publish('orders', 'order.created', { orderId }, { correlationId: orderId }); // object → JSON; waits for the confirm
+// publish() throws when no queue is bound for the routing key; { mandatory: false } allows it
+const event = await listener.waitForMessage((m) => m.json<{ orderId: string }>().orderId === orderId); // match on a test-unique value
+expect(event.routingKey).toBe('order.created');                         // also body, headers, properties
+const queue = await amqpClient.assertQueue(testData.unique('jobs'));     // deleted after the test (no durable: false on RabbitMQ 4)
+await amqpClient.sendToQueue(queue, 'job');
+const taken = await amqpClient.consume(queue, { count: 1, timeout: 5000 }); // takes and acks: never on the app's own queues
+await amqpClient.purge(queue);                                           // → number removed
+const info = await amqpClient.checkQueue(queue);                         // { messageCount, consumerCount } | null
 ```
 
 **Redis Client:**
@@ -452,6 +471,9 @@ Set active environment: `PW_ENVIRONMENT=dev`
 | `PW_DB_HOST`, `PW_DB_PORT`, `PW_DB_NAME` | Database connection |
 | `PW_DB_USERNAME`, `PW_DB_PASSWORD` | Database credentials |
 | `PW_KAFKA_BROKERS` | Comma-separated broker list |
+| `PW_AMQP_URL` | RabbitMQ / AMQP broker URL (`amqp://user:pass@host:5672/vhost`, `amqps://` for TLS) |
+| `PW_AMQP_HOST`, `PW_AMQP_PORT`, `PW_AMQP_USERNAME`, `PW_AMQP_PASSWORD`, `PW_AMQP_VHOST`, `PW_AMQP_TLS` | AMQP broker without a URL |
+| `PW_AMQP_TIMEOUT`, `PW_AMQP_HEARTBEAT` | Default wait for messages (ms), heartbeat (s) |
 | `PW_REDIS_HOST`, `PW_REDIS_PORT`, `PW_REDIS_PASSWORD` | Redis connection |
 | `PW_REDIS_KEY_PREFIX` | Test key prefix for isolation |
 | `PW_MONGODB_URI` | Full MongoDB connection URI (overrides host/port) |
@@ -470,7 +492,7 @@ Set active environment: `PW_ENVIRONMENT=dev`
 | `PW_APPIUM_NEW_COMMAND_TIMEOUT`, `PW_APPIUM_SESSION_TIMEOUT` | Idle timeout (s), session-create timeout (ms) |
 | `PW_GADS_CLIENT_SECRET` | Enables the GADS preset; client secret from GADS Admin → Client credentials |
 | `PW_GADS_QUEUE_TIMEOUT` | GADS: seconds to wait for a free device |
-| `PW_DB_CONTAINER`, `PW_REDIS_CONTAINER`, `PW_MONGODB_CONTAINER`, `PW_NEO4J_CONTAINER`, `PW_KAFKA_CONTAINER` | `true` (or an image name) starts that backend in a Testcontainers container for the run; needs Docker and `testcontainers` |
+| `PW_DB_CONTAINER`, `PW_REDIS_CONTAINER`, `PW_MONGODB_CONTAINER`, `PW_NEO4J_CONTAINER`, `PW_KAFKA_CONTAINER`, `PW_AMQP_CONTAINER` | `true` (or an image name) starts that backend in a Testcontainers container for the run; needs Docker and `testcontainers` |
 | `PW_DB_CONTAINER_INIT` | Comma-separated SQL files run once in the database container (PostgreSQL, MySQL, MSSQL) |
 | `PW_MOCK_URL`, `PW_MOCK_ADMIN_URL`, `PW_MOCK_CONTAINER` | WireMock base/admin URL for `mockServer`, or start it in a container |
 | `PW_AUTH_ISSUER` / `PW_AUTH_TOKEN_URL` | OAuth/OIDC token endpoint (issuer uses discovery) for the auth helpers |
@@ -501,9 +523,10 @@ Tests are matched to projects via `testMatch` patterns in `playwright.config.ts`
 | `browser-chromium` | `**/examples/browser.spec.ts` | Standard Playwright `page` |
 | `browser-firefox` | `**/examples/browser.spec.ts` | Standard Playwright `page` |
 | `browser-webkit` | `**/examples/browser.spec.ts` | Standard Playwright `page` |
-| `api-integration` | `**/examples/{database,kafka,redis,mongodb,neo4j}.spec.ts` | `databaseClient`, `kafkaClient`, `redisClient`, `mongoDbClient`, `neo4jClient` |
+| `api-integration` | `**/examples/{database,kafka,amqp,redis,mongodb,neo4j}.spec.ts` | `databaseClient`, `kafkaClient`, `amqpClient`, `redisClient`, `mongoDbClient`, `neo4jClient` |
 | `integration-database` | `**/examples/database.spec.ts` | `databaseClient` |
 | `integration-kafka` | `**/examples/kafka.spec.ts` | `kafkaClient` |
+| `integration-amqp` | `**/examples/amqp.spec.ts` | `amqpClient` (needs RabbitMQ) |
 | `integration-redis` | `**/examples/redis.spec.ts` | `redisClient` |
 | `integration-mongodb` | `**/examples/mongodb.spec.ts` | `mongoDbClient` |
 | `integration-neo4j` | `**/examples/neo4j.spec.ts` | `neo4jClient` |
@@ -584,7 +607,7 @@ Every generated test **must** include a unique TestCaseID in both the test title
 ### Format
 
 - **Pattern:** `TC-XXX-NNN` where `XXX` is a short category code and `NNN` is a zero-padded sequential number.
-- **Category codes:** `API`, `DB`, `KFK`, `RDS`, `MDB`, `NEO`, `GQL`, `BRW`, `APM` (Appium), `GDS` (GADS), `OTP`, `EML` (email/inbox), `MCK` (mock server), `AUTH`, `INT`, `PROP`, or a custom short code for new domains. `MOB` is retired: the Mobilewright tests that used it were removed, so do not reuse it.
+- **Category codes:** `API`, `DB`, `KFK`, `AMQ` (RabbitMQ/AMQP), `RDS`, `MDB`, `NEO`, `GQL`, `BRW`, `APM` (Appium), `GDS` (GADS), `OTP`, `EML` (email/inbox), `MCK` (mock server), `AUTH`, `INT`, `PROP`, or a custom short code for new domains. `MOB` is retired: the Mobilewright tests that used it were removed, so do not reuse it.
 - **Placement:** The TestCaseID appears in square brackets at the beginning of the test title AND as a tag.
 
 ### Rules

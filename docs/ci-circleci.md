@@ -145,6 +145,21 @@ jobs:
           setup:
             - wait-for: { port: 9092 }
 
+  rabbitmq:
+    docker:
+      - image: node:24
+        environment:
+          PW_AMQP_URL: amqp://testuser:testpass@localhost:5672
+      - image: rabbitmq:4
+        environment:
+          RABBITMQ_DEFAULT_USER: testuser
+          RABBITMQ_DEFAULT_PASS: testpass
+    steps:
+      - playwright:
+          projects: --project=integration-amqp
+          setup:
+            - wait-for: { port: 5672 }
+
   browser:
     docker:
       - image: mcr.microsoft.com/playwright:v1.65.1-noble   # must match @playwright/test
@@ -157,7 +172,7 @@ jobs:
 
 workflows:
   tests:
-    jobs: [checks, postgres, redis, mongodb, kafka, browser]
+    jobs: [checks, postgres, redis, mongodb, kafka, rabbitmq, browser]
 ```
 
 `node:24` and the Playwright image both include `git` and `ssh`, which `checkout` needs. CircleCI's `cimg/node` images work too.

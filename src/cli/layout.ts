@@ -71,6 +71,7 @@ export const integrationProjects = (config: FrameworkConfig) => [
             openapi: config.openapi,
             database: config.database,
             kafka: config.kafka,
+            amqp: config.amqp,
             redis: config.redis,
             mongodb: config.mongodb,
             neo4j: config.neo4j,

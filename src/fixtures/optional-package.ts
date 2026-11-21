@@ -26,6 +26,7 @@ export const FIXTURE_PACKAGES = {
     mongoDbClient: ['mongodb'],
     neo4jClient: ['neo4j-driver'],
     kafkaClient: ['kafkajs'],
+    amqpClient: ['amqplib'],
     redisClient: ['ioredis'],
     otpClient: ['otplib'],
     'testData (faker)': ['@faker-js/faker'],

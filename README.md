@@ -30,6 +30,7 @@ npm install --save-dev openapi-client-axios pg kafkajs
 | `mongoDbClient` | `mongodb` |
 | `neo4jClient` | `neo4j-driver` |
 | `kafkaClient` | `kafkajs` |
+| `amqpClient` | `amqplib` |
 | `redisClient` | `ioredis` |
 | `otpClient` | `otplib` |
 | `inboxClient` | nothing (uses `fetch`); needs a [Mailpit](https://mailpit.axllent.org/) server |
@@ -90,6 +91,7 @@ Already have tests? `init` moves nothing. `npx propmaster organize` shows where 
 | `openApiClient` | `OpenApiClient` | Typed HTTP client generated from your OpenAPI spec | [Setup & Usage](docs/openapi-fixture.md) |
 | `databaseClient` | `DatabaseClient` | Multi-dialect DB client (PostgreSQL, MySQL, MSSQL, SQLite) | [Setup & Usage](docs/database-fixture.md) |
 | `kafkaClient` | `KafkaClient` | Kafka producer/consumer | [Setup & Usage](docs/kafka-fixture.md) |
+| `amqpClient` | `AmqpClient` | RabbitMQ / AMQP: publish, listen on an exchange, consume, purge | [Setup & Usage](docs/amqp-fixture.md) |
 | `redisClient` | `RedisClient` | Redis client with pub/sub | [Setup & Usage](docs/redis-fixture.md) |
 | `mongoDbClient` | `MongoDbClient` | MongoDB CRUD and aggregation client | [Setup & Usage](docs/mongodb-fixture.md) |
 | `neo4jClient` | `Neo4jClient` | Neo4j Cypher reads, writes and transactions | [Setup & Usage](docs/neo4j-fixture.md) |
@@ -209,6 +211,24 @@ test.describe('Kafka Messaging', () => {
 
     expect(messages).toHaveLength(1);
     expect(JSON.parse(messages[0].value)).toMatchObject(payload);
+  });
+});
+```
+
+### RabbitMQ (AMQP) Client
+
+```typescript
+import { test, expect } from '@inluxc/propmaster';
+
+test.describe('Order events', () => {
+  test('placing an order publishes order.created', async ({ amqpClient, openApiClient }) => {
+    // Listen first: a temporary queue bound to the exchange, so the app's own queues keep their copies
+    const listener = await amqpClient.listen('orders', 'order.*');
+
+    const { data: order } = await (openApiClient.client as any).createOrder(null, { sku: 'SKU-1' });
+
+    const event = await listener.waitForMessage((m) => m.json<{ orderId: string }>().orderId === order.id);
+    expect(event.routingKey).toBe('order.created');
   });
 });
 ```
@@ -373,6 +393,7 @@ PW_ENVIRONMENT=dev npx playwright test
 | `PW_DB_HOST` / `PW_DB_PORT` / `PW_DB_NAME` | Database connection |
 | `PW_DB_USERNAME` / `PW_DB_PASSWORD` | Database credentials |
 | `PW_KAFKA_BROKERS` | Comma-separated broker list |
+| `PW_AMQP_URL` | RabbitMQ / AMQP broker URL (`amqp://user:pass@host:5672/vhost`), or `PW_AMQP_HOST`, `PW_AMQP_PORT`, `PW_AMQP_USERNAME`, `PW_AMQP_PASSWORD`, `PW_AMQP_VHOST` |
 | `PW_REDIS_HOST` / `PW_REDIS_PORT` / `PW_REDIS_PASSWORD` | Redis connection |
 | `PW_REDIS_KEY_PREFIX` | Key prefix for test isolation |
 | `PW_NEO4J_URI` | Neo4j connection URI (`bolt://` or `neo4j://`) |
@@ -462,7 +483,7 @@ test-redis:
     - run: npx playwright test --project=integration-redis
 ```
 
-See [docs/ci.md](docs/ci.md) for a job per backend (PostgreSQL, MySQL, MSSQL, SQLite, Redis, MongoDB, Neo4j, Kafka, OpenAPI, GraphQL, OTP, browsers), combining services in one job, and keeping CI fast.
+See [docs/ci.md](docs/ci.md) for a job per backend (PostgreSQL, MySQL, MSSQL, SQLite, Redis, MongoDB, Neo4j, Kafka, RabbitMQ, OpenAPI, GraphQL, OTP, browsers), combining services in one job, and keeping CI fast.
 
 No services to start at all: set `PW_<BACKEND>_CONTAINER=true` and each backend runs in a throwaway container started by the test run itself ([Testcontainers](docs/testcontainers.md)):
 

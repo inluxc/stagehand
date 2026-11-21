@@ -80,7 +80,8 @@ export class FixtureInitError extends FrameworkError {
 export class FixtureOperationError extends FrameworkError {
     constructor(
         public readonly fixtureName: string,
-        public readonly operation: 'query' | 'produce' | 'consume' | 'find' | 'findOne' | 'insertOne' | 'insertMany' | 'updateOne' | 'updateMany' | 'deleteOne' | 'deleteMany' | 'aggregate' | 'run' | 'write' | 'transaction' | 'command' | 'release' | 'waitForMessage' | 'extractCode' | 'extractLink' | 'send' | 'stub' | 'verify' | 'insert' | 'build' | 'cleanup',
+        public readonly operation: 'query' | 'produce' | 'consume' | 'find' | 'findOne' | 'insertOne' | 'insertMany' | 'updateOne' | 'updateMany' | 'deleteOne' | 'deleteMany' | 'aggregate' | 'run' | 'write' | 'transaction' | 'command' | 'release' | 'waitForMessage' | 'extractCode' | 'extractLink' | 'send' | 'stub' | 'verify' | 'insert' | 'build' | 'cleanup'
+            | 'publish' | 'sendToQueue' | 'listen' | 'purge' | 'checkQueue' | 'exchangeExists' | 'assertQueue' | 'assertExchange' | 'bindQueue' | 'json',
         public readonly details: Record<string, unknown>,
         public readonly cause?: Error
     ) {

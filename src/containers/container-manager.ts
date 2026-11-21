@@ -22,6 +22,7 @@ import type {
     ContainerSetting,
     DatabaseFixtureConfig,
     KafkaFixtureConfig,
+    AmqpFixtureConfig,
     MongoDbFixtureConfig,
     Neo4jFixtureConfig,
     RedisFixtureConfig,
@@ -33,7 +34,7 @@ import { loadOptional } from '../fixtures/optional-package.js';
 
 type Testcontainers = typeof import('testcontainers');
 
-export type ContainerKind = 'postgresql' | 'mysql' | 'mssql' | 'redis' | 'mongodb' | 'neo4j' | 'kafka' | 'mailpit' | 'wiremock';
+export type ContainerKind = 'postgresql' | 'mysql' | 'mssql' | 'redis' | 'mongodb' | 'neo4j' | 'kafka' | 'rabbitmq' | 'mailpit' | 'wiremock';
 
 /** Default image per backend — the same ones as compose.test.yaml and CI. */
 export const DEFAULT_IMAGES: Record<ContainerKind, string> = {
@@ -44,6 +45,7 @@ export const DEFAULT_IMAGES: Record<ContainerKind, string> = {
     mongodb: 'mongo:7',
     neo4j: 'neo4j:5',
     kafka: 'apache/kafka:latest',
+    rabbitmq: 'rabbitmq:4',
     mailpit: 'axllent/mailpit:latest',
     wiremock: 'wiremock/wiremock:3.13.2',
 };
@@ -266,6 +268,28 @@ export function kafkaSpec(options: ContainerOptions, host: string, hostPort: num
     };
 }
 
+/**
+ * RabbitMQ: the image's default `guest` user may only connect from inside the
+ * container, so the broker gets the config's credentials (or throwaway ones).
+ */
+export function rabbitMqSpec(config: AmqpFixtureConfig, options: ContainerOptions): { spec: ContainerSpec; username: string; password: string; vhost: string } {
+    const username = config.username || DEFAULT_CREDENTIALS.username;
+    const password = config.password || DEFAULT_CREDENTIALS.password;
+    const vhost = config.vhost || '/';
+    return {
+        spec: {
+            ...baseSpec('rabbitmq', 'amqpClient', options),
+            env: { RABBITMQ_DEFAULT_USER: username, RABBITMQ_DEFAULT_PASS: password, RABBITMQ_DEFAULT_VHOST: vhost },
+            port: 5672,
+            // `ping` passes before the AMQP listener is up; this waits for the port.
+            healthCheck: 'rabbitmq-diagnostics -q check_port_connectivity',
+        },
+        username,
+        password,
+        vhost,
+    };
+}
+
 /** Mailpit: the API/UI on 8025 for the fixture, SMTP on 1025 for the app under test. */
 export function mailpitSpec(options: ContainerOptions): ContainerSpec {
     return {
@@ -410,6 +434,15 @@ export class ContainerManager {
         const key = JSON.stringify(['kafka', options.image ?? DEFAULT_IMAGES.kafka]);
         const started = await this.ensureKeyed(key, async () => this.start(kafkaSpec(options, host, await freePort())));
         return { ...config, brokers: [`${started.host}:${started.port}`], ssl: false, sasl: undefined, container: false };
+    }
+
+    /** RabbitMQ: host/port/credentials point at the container (`url` is dropped). */
+    async amqp(config: AmqpFixtureConfig): Promise<AmqpFixtureConfig> {
+        const options = containerOptions(config.container);
+        if (!options) return config;
+        const { spec, username, password, vhost } = rabbitMqSpec(config, options);
+        const started = await this.ensure(spec);
+        return { ...config, url: undefined, tls: false, host: started.host, port: started.port, username, password, vhost, container: false };
     }
 
     /** Mailpit: `url` points at its API, `smtpHost`/`smtpPort` at its SMTP server. */

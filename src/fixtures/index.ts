@@ -25,6 +25,7 @@ import type {
     OpenApiFixtureConfig,
     DatabaseFixtureConfig,
     KafkaFixtureConfig,
+    AmqpFixtureConfig,
     RedisFixtureConfig,
     MongoDbFixtureConfig,
     Neo4jFixtureConfig,
@@ -38,6 +39,7 @@ import type {
 import { openApiFixture, type OpenApiClient } from './openapi.fixture.js';
 import { databaseFixture, type DatabaseClient } from './database.fixture.js';
 import { kafkaFixture, type KafkaClient } from './kafka.fixture.js';
+import { amqpFixture, type AmqpClient } from './amqp.fixture.js';
 import { redisFixture, type RedisClient } from './redis.fixture.js';
 import { mongoDbFixture, type MongoDbClient } from './mongodb.fixture.js';
 import { neo4jFixture, type Neo4jClient } from './neo4j.fixture.js';
@@ -63,6 +65,7 @@ export interface ConfigOptions {
     openapi: OpenApiFixtureConfig | undefined;
     database: DatabaseFixtureConfig | undefined;
     kafka: KafkaFixtureConfig | undefined;
+    amqp: AmqpFixtureConfig | undefined;
     redis: RedisFixtureConfig | undefined;
     mongodb: MongoDbFixtureConfig | undefined;
     neo4j: Neo4jFixtureConfig | undefined;
@@ -89,6 +92,8 @@ export interface FixtureTypes {
     openApiClient: OpenApiClient;
     databaseClient: DatabaseClient;
     kafkaClient: KafkaClient;
+    /** RabbitMQ / AMQP 0-9-1: publish, listen on an exchange, consume, purge. */
+    amqpClient: AmqpClient;
     redisConfig: RedisFixtureConfig;
     redisClient: RedisClient;
     mongoDbClient: MongoDbClient;
@@ -130,6 +135,7 @@ const configOptionFixtures = {
     openapi: [undefined as OpenApiFixtureConfig | undefined, { option: true }],
     database: [undefined as DatabaseFixtureConfig | undefined, { option: true }],
     kafka: [undefined as KafkaFixtureConfig | undefined, { option: true }],
+    amqp: [undefined as AmqpFixtureConfig | undefined, { option: true }],
     redis: [undefined as RedisFixtureConfig | undefined, { option: true }],
     mongodb: [undefined as MongoDbFixtureConfig | undefined, { option: true }],
     neo4j: [undefined as Neo4jFixtureConfig | undefined, { option: true }],
@@ -446,6 +452,7 @@ const allFixtures = {
     ...openApiFixture,
     ...databaseFixture,
     ...kafkaFixture,
+    ...amqpFixture,
     ...redisConfigFixture,
     ...redisFixture,
     ...mongoDbFixture,
@@ -476,6 +483,17 @@ export { expect } from '@playwright/test';
 export type { OpenApiClient, AxiosResponseLike, ContractCallOption } from './openapi.fixture.js';
 export type { DatabaseClient } from './database.fixture.js';
 export type { KafkaClient } from './kafka.fixture.js';
+export type {
+    AmqpClient,
+    AmqpListener,
+    AmqpMessage,
+    AmqpBody,
+    AmqpPublishOptions,
+    AmqpConsumeOptions,
+    AmqpWaitOptions,
+    AmqpListenOptions,
+    AmqpQueueInfo,
+} from './amqp.fixture.js';
 export type { InboxClient, InboxMessage, InboxProvider, MessageQuery, WaitOptions, SendOptions } from './inbox.fixture.js';
 export type { MockServer, RequestMatch, StubResponse, RecordedRequest, Stub } from './mock-server.fixture.js';
 export type { RedisClient } from './redis.fixture.js';

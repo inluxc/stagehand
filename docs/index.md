@@ -31,8 +31,8 @@ features:
     link: /database-fixture
     linkText: Database fixture
   - icon: 📨
-    title: Kafka & Redis
-    details: Produce and consume Kafka messages, and use Redis keys and pub/sub with per-run key prefixes for isolation.
+    title: Kafka, RabbitMQ & Redis
+    details: Produce and consume Kafka messages, publish to RabbitMQ and listen for the events your app publishes, and use Redis keys and pub/sub with per-run key prefixes.
     link: /kafka-fixture
     linkText: Messaging fixtures
   - icon: 📱

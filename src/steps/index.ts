@@ -12,6 +12,8 @@ export { GraphQLSteps } from './graphql.steps.js';
 export type { GraphQLClient } from './graphql.steps.js';
 export { KafkaSteps } from './kafka.steps.js';
 export type { KafkaClient, KafkaMessage } from './kafka.steps.js';
+export { AmqpSteps } from './amqp.steps.js';
+export type { AmqpClient, AmqpListener, AmqpMessage } from './amqp.steps.js';
 export { MongoDbSteps } from './mongodb.steps.js';
 export type { MongoDbClient } from './mongodb.steps.js';
 export { RedisSteps } from './redis.steps.js';

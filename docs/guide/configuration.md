@@ -65,6 +65,7 @@ Every setting has a `PW_*` variable. These are the most common ones. Each fixtur
 | `PW_MONGODB_URI` or `PW_MONGODB_HOST`, `PW_MONGODB_PORT`, `PW_MONGODB_DATABASE` | MongoDB connection |
 | `PW_NEO4J_URI`, `PW_NEO4J_USERNAME`, `PW_NEO4J_PASSWORD` | Neo4j connection |
 | `PW_KAFKA_BROKERS` | Comma-separated broker list |
+| `PW_AMQP_URL` or `PW_AMQP_HOST`, `PW_AMQP_PORT`, `PW_AMQP_USERNAME`, `PW_AMQP_PASSWORD`, `PW_AMQP_VHOST` | RabbitMQ / AMQP broker |
 | `PW_REDIS_HOST`, `PW_REDIS_PORT`, `PW_REDIS_PASSWORD`, `PW_REDIS_KEY_PREFIX` | Redis connection and key prefix |
 | `PW_APPIUM_SERVER_URL`, `PW_APPIUM_PLATFORM`, `PW_APPIUM_UDID`, `PW_APPIUM_DEVICE_NAME` | Appium server and device |
 | `PW_GADS_CLIENT_SECRET` | Turns on the GADS device-farm preset |

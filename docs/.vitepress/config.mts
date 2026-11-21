@@ -61,6 +61,7 @@ export default defineConfig({
                     { text: 'Database', link: '/database-fixture' },
                     { text: 'GraphQL', link: '/graphql-fixture' },
                     { text: 'Kafka', link: '/kafka-fixture' },
+                    { text: 'RabbitMQ (AMQP)', link: '/amqp-fixture' },
                     { text: 'Redis', link: '/redis-fixture' },
                     { text: 'MongoDB', link: '/mongodb-fixture' },
                     { text: 'Neo4j', link: '/neo4j-fixture' },

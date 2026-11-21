@@ -211,7 +211,7 @@ tests/
     └── config/      # Test configuration helpers
 \`\`\`
 
-**Where a test goes** is decided by its fixtures: \`appiumDriver\` → \`mobile/\`; \`page\`/\`context\`/\`browser\` → \`e2e/\` (even if it also uses API fixtures to set up data); a database, Kafka, Redis, MongoDB or Neo4j client → \`integration/\`; only \`openApiClient\`/\`graphqlClient\`/\`request\` → \`api/\`. Spec files end in \`.spec.ts\`. Run \`npx propmaster organize\` to check (it prints where each test belongs).
+**Where a test goes** is decided by its fixtures: \`appiumDriver\` → \`mobile/\`; \`page\`/\`context\`/\`browser\` → \`e2e/\` (even if it also uses API fixtures to set up data); a database, Kafka, RabbitMQ, Redis, MongoDB or Neo4j client → \`integration/\`; only \`openApiClient\`/\`graphqlClient\`/\`request\` → \`api/\`. Spec files end in \`.spec.ts\`. Run \`npx propmaster organize\` to check (it prints where each test belongs).
 
 ## Writing Tests
 
@@ -340,7 +340,7 @@ Rules: IDs are unique across the project, never reused after a test is deleted, 
 
 ## Skill 1: Create a Spec Test
 
-Create a \`.spec.ts\` file in the folder for the test's type: \`tests/api/\` (HTTP/GraphQL clients only), \`tests/integration/\` (database, Kafka, Redis, MongoDB or Neo4j clients), \`tests/e2e/\` (\`page\`) or \`tests/mobile/\` (\`appiumDriver\`, a WebdriverIO \`Browser\`; set \`appium.gads\` to run on a GADS device farm).
+Create a \`.spec.ts\` file in the folder for the test's type: \`tests/api/\` (HTTP/GraphQL clients only), \`tests/integration/\` (database, Kafka, RabbitMQ, Redis, MongoDB or Neo4j clients), \`tests/e2e/\` (\`page\`) or \`tests/mobile/\` (\`appiumDriver\`, a WebdriverIO \`Browser\`; set \`appium.gads\` to run on a GADS device farm).
 
 \`\`\`typescript
 import { test, expect } from '@inluxc/propmaster';
@@ -365,7 +365,7 @@ test.describe('Feature Name', () => {
 \`\`\`
 
 Steps:
-1. Pick the category code (\`API\`, \`DB\`, \`KFK\`, \`RDS\`, \`MDB\`, \`NEO\`, \`GQL\`, \`BRW\`, \`APM\`, \`GDS\`, \`OTP\`, \`INT\`, or a custom one)
+1. Pick the category code (\`API\`, \`DB\`, \`KFK\`, \`AMQ\`, \`RDS\`, \`MDB\`, \`NEO\`, \`GQL\`, \`BRW\`, \`APM\`, \`GDS\`, \`OTP\`, \`INT\`, or a custom one)
 2. Run \`npm run next-id -- <CATEGORY> <count>\` and replace every placeholder ID
 3. Run \`npm run lint:tests\`
 

@@ -129,6 +129,20 @@ kafka:
     - wait_for kafka 9092
     - npx playwright test --project=integration-kafka --reporter=line,junit
 
+rabbitmq:
+  extends: .playwright
+  services:
+    - name: rabbitmq:4
+      alias: rabbitmq
+      variables:
+        RABBITMQ_DEFAULT_USER: testuser
+        RABBITMQ_DEFAULT_PASS: testpass
+  variables:
+    PW_AMQP_URL: amqp://testuser:testpass@rabbitmq:5672
+  script:
+    - wait_for rabbitmq 5672
+    - npx playwright test --project=integration-amqp --reporter=line,junit
+
 browser:
   extends: .playwright
   image: mcr.microsoft.com/playwright:v1.65.1-noble   # must match @playwright/test

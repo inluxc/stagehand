@@ -23,7 +23,7 @@ import { TEST_TYPES, configSnippet, typeInfo, type TestType } from './layout.js'
 
 const MOBILE = new Set(['appiumDriver', 'gadsHub']);
 const E2E = new Set(['page', 'context', 'browser', 'browserName']);
-const INTEGRATION = new Set(['databaseClient', 'kafkaClient', 'redisClient', 'mongoDbClient', 'neo4jClient']);
+const INTEGRATION = new Set(['databaseClient', 'kafkaClient', 'amqpClient', 'redisClient', 'mongoDbClient', 'neo4jClient']);
 const API = new Set(['openApiClient', 'graphqlClient', 'request']);
 /** Fixtures that say nothing about the test type: options, configs, OTP. */
 const NEUTRAL = new Set([
@@ -32,6 +32,7 @@ const NEUTRAL = new Set([
     'openapi',
     'database',
     'kafka',
+    'amqp',
     'redis',
     'mongodb',
     'neo4j',

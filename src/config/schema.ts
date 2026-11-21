@@ -110,6 +110,33 @@ export interface KafkaFixtureConfig {
 }
 
 /**
+ * Configuration for the RabbitMQ / AMQP 0-9-1 fixture (`amqpClient`).
+ * Give either `url` or `host` (plus port, credentials and vhost).
+ */
+export interface AmqpFixtureConfig {
+    /** Broker URL, e.g. `amqp://user:pass@localhost:5672/vhost` (`amqps://` for TLS). Wins over host/port/credentials. */
+    url?: string;
+    /** Broker host. */
+    host?: string;
+    /** Broker port (default: 5672, 5671 with `tls`). */
+    port?: number;
+    username?: string;
+    password?: string;
+    /** Virtual host (default: `/`). */
+    vhost?: string;
+    /** Connect with TLS (`amqps`). */
+    tls?: boolean;
+    /** Heartbeat interval in seconds (default: the broker's; 0 turns heartbeats off). */
+    heartbeat?: number;
+    /** Connection timeout in ms (default: 10000). */
+    connectionTimeout?: number;
+    /** Default wait for `consume()`, `listener.messages()` and `waitForMessage()` in ms (default: 10000). */
+    timeout?: number;
+    /** Start this backend in a Docker container for the run (see ContainerOptions). */
+    container?: ContainerSetting;
+}
+
+/**
  * Configuration for the Redis integration fixture.
  */
 export interface RedisFixtureConfig {
@@ -363,6 +390,8 @@ export interface FrameworkConfig {
     database?: DatabaseFixtureConfig;
     /** Kafka fixture configuration. */
     kafka?: KafkaFixtureConfig;
+    /** RabbitMQ / AMQP fixture configuration. */
+    amqp?: AmqpFixtureConfig;
     /** Redis fixture configuration. */
     redis?: RedisFixtureConfig;
     /** MongoDB fixture configuration. */

@@ -21,6 +21,15 @@ export type {
     ContractCallOption,
     DatabaseClient,
     KafkaClient,
+    AmqpClient,
+    AmqpListener,
+    AmqpMessage,
+    AmqpBody,
+    AmqpPublishOptions,
+    AmqpConsumeOptions,
+    AmqpWaitOptions,
+    AmqpListenOptions,
+    AmqpQueueInfo,
     RedisClient,
     MongoDbClient,
     Neo4jClient,
@@ -58,6 +67,7 @@ export type {
     MongoDbFixtureConfig,
     Neo4jFixtureConfig,
     KafkaFixtureConfig,
+    AmqpFixtureConfig,
     RedisFixtureConfig,
     OtpFixtureConfig,
     InboxFixtureConfig,
@@ -79,6 +89,9 @@ export { setupAuth, saveAuthState, authCredentials, hasFreshAuthState, type Setu
 export { ContainerManager, DEFAULT_IMAGES } from './containers/container-manager.js';
 export { TestData, defineFactory, CleanupRegistry, type Factory, type FactoryContext, type Overrides, type KeepOption } from './test-data/index.js';
 export { EnvLoader } from './config/index.js';
+
+// AMQP client outside the fixture (e.g. a global setup that declares exchanges)
+export { createAmqpClient } from './fixtures/amqp.fixture.js';
 
 // Appium/GADS helpers for use outside the fixture (e.g. worker-scoped sessions)
 export { startAppiumSession, createGadsHubClient, gadsSessionInfo } from './fixtures/appium.fixture.js';

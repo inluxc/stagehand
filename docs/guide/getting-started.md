@@ -23,6 +23,7 @@ Propmaster itself has no runtime dependencies. Each fixture's driver is an optio
 | `mongoDbClient` | `mongodb` |
 | `neo4jClient` | `neo4j-driver` |
 | `kafkaClient` | `kafkajs` |
+| `amqpClient` | `amqplib` |
 | `redisClient` | `ioredis` |
 | `otpClient` | `otplib` |
 | `inboxClient` | nothing (uses `fetch`); needs a Mailpit server |
@@ -111,6 +112,7 @@ test('a user created through the API appears in the admin UI', async ({ openApiC
 | `mongoDbClient` | MongoDB CRUD and aggregation | [MongoDB](../mongodb-fixture) |
 | `neo4jClient` | Neo4j Cypher reads, writes and transactions | [Neo4j](../neo4j-fixture) |
 | `kafkaClient` | Kafka produce and consume | [Kafka](../kafka-fixture) |
+| `amqpClient` | RabbitMQ publish, listen on an exchange, consume and purge | [RabbitMQ](../amqp-fixture) |
 | `redisClient` | Redis keys and pub/sub | [Redis](../redis-fixture) |
 | `otpClient` | TOTP/HOTP codes for 2FA flows | [OTP](../otp-fixture) |
 | `inboxClient` | Emailed codes, verification and reset links (Mailpit) | [Inbox](../inbox-fixture) |

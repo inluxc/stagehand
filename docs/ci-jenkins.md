@@ -153,6 +153,21 @@ pipeline {
                     }
                 }
 
+                stage('RabbitMQ') {
+                    agent { label 'docker' }
+                    steps {
+                        script {
+                            withService(image: 'rabbitmq:4', alias: 'rabbitmq',
+                                        args: '-e RABBITMQ_DEFAULT_USER=testuser -e RABBITMQ_DEFAULT_PASS=testpass',
+                                        ready: 'rabbitmq-diagnostics -q check_port_connectivity') {
+                                withEnv(['PW_AMQP_URL=amqp://testuser:testpass@rabbitmq:5672']) {
+                                    sh 'npx playwright test --project=integration-amqp --reporter=line,junit'
+                                }
+                            }
+                        }
+                    }
+                }
+
                 stage('Browsers') {
                     agent {
                         docker {
